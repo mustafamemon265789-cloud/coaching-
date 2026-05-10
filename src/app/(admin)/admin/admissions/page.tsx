@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import DataTable from '@/components/admin/DataTable'
 import { useToast } from '@/components/admin/ToastProvider'
 import { getAdmissions, updateAdmission, type LocalAdmission } from '@/lib/db'
@@ -12,33 +12,54 @@ const columns = [
   { key: 'student_name', label: 'Student Name' },
   { key: 'father_name', label: 'Father Name' },
   { key: 'phone', label: 'Phone' },
-  { key: 'course', label: 'Course' },
-  { key: 'branch', label: 'Branch' },
+  { key: 'course_name', label: 'Course' },
+  { key: 'branch_name', label: 'Branch' },
   { key: 'class_applying', label: 'Class' },
   { key: 'applied_at', label: 'Date' },
   { key: 'status', label: 'Status' },
 ]
 
-const statusColors: Record<Status, string> = {
-  Pending: 'text-yellow-600 bg-yellow-50',
-  Approved: 'text-green-600 bg-green-50',
-  Rejected: 'text-red-600 bg-red-50',
+const statusColors: Record<string, string> = {
+  pending: 'text-yellow-600 bg-yellow-50',
+  approved: 'text-green-600 bg-green-50',
+  rejected: 'text-red-600 bg-red-50',
 }
 
 export default function AdmissionsPage() {
-  const [admissions, setAdmissions] = useState<LocalAdmission[]>(() =>
-    typeof window !== 'undefined' ? getAdmissions() : []
-  )
+  const [admissions, setAdmissions] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [filter, setFilter] = useState<Status | 'All'>('All')
   const { showToast } = useToast()
 
+  const loadData = async () => {
+    setIsLoading(true)
+    const rawData = await getAdmissions()
+    const mapped = rawData.map(a => ({
+      ...a,
+      branch_name: a.branch?.name || '-',
+      course_name: a.course?.title || '-',
+    }))
+    setAdmissions(mapped)
+    setIsLoading(false)
+  }
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
   const filtered = filter === 'All' ? admissions : admissions.filter((a) => a.status === filter)
 
-  const handleStatus = (id: number, status: Status) => {
-    updateAdmission(id, { status })
-    setAdmissions(getAdmissions())
-    showToast('success', `Admission #${id} ${status.toLowerCase()}.`)
+  const handleStatus = async (id: string, status: Status) => {
+    try {
+      await updateAdmission(id, { status })
+      await loadData()
+      showToast('success', `Admission status updated to ${status}.`)
+    } catch {
+      showToast('error', 'Failed to update admission.')
+    }
   }
+
+  if (isLoading) return <div className="p-12 text-center text-gray-500">Loading admissions...</div>
 
   return (
     <div>
@@ -54,11 +75,11 @@ export default function AdmissionsPage() {
         <>
           <div className="mb-4 flex items-center gap-3">
             <span className="text-sm font-medium text-gray-600">Filter:</span>
-            {(['All', 'Pending', 'Approved', 'Rejected'] as const).map((s) => (
+            {(['All', 'pending', 'approved', 'rejected'] as const).map((s) => (
               <button
                 key={s}
                 onClick={() => setFilter(s)}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors capitalize ${
                   filter === s
                     ? 'bg-[#1A3C8F] text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -72,18 +93,18 @@ export default function AdmissionsPage() {
           <DataTable
             columns={columns}
             data={filtered}
-            searchKeys={['student_name', 'father_name', 'phone', 'course', 'branch']}
+            searchKeys={['student_name', 'father_name', 'phone', 'course_name', 'branch_name']}
             actions={(row) =>
-              row.status === 'Pending' ? (
+              row.status === 'pending' ? (
                 <div className="flex gap-2">
                   <button
-                    onClick={() => handleStatus(row.id, 'Approved')}
+                    onClick={() => handleStatus(row.id, 'approved')}
                     className="rounded bg-green-500 px-3 py-1 text-xs font-medium text-white hover:bg-green-600"
                   >
                     Approve
                   </button>
                   <button
-                    onClick={() => handleStatus(row.id, 'Rejected')}
+                    onClick={() => handleStatus(row.id, 'rejected')}
                     className="rounded bg-red-500 px-3 py-1 text-xs font-medium text-white hover:bg-red-600"
                   >
                     Reject
@@ -91,7 +112,7 @@ export default function AdmissionsPage() {
                 </div>
               ) : (
                 <span
-                  className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors[row.status as Status]}`}
+                  className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${statusColors[row.status]}`}
                 >
                   {row.status}
                 </span>

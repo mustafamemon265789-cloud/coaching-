@@ -11,18 +11,6 @@ const announcements = [
 export default function AnnouncementTicker() {
   return (
     <div className="flex items-center gap-4 overflow-hidden bg-amber-50 py-3">
-      <style>{`
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-marquee {
-          animation: marquee 30s linear infinite;
-        }
-        .animate-marquee:hover {
-          animation-play-state: paused;
-        }
-      `}</style>
       <div className="flex shrink-0 items-center gap-3 pl-6">
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-white">
           <Megaphone className="h-4 w-4" />

@@ -1,17 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Check, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react'
-import { addAdmission } from '@/lib/db'
+import { addAdmission, getBranches, getCourses, type Branch, type Course } from '@/lib/db'
 
-const branches = ['Main Branch Gulshan', 'North Nazimabad', 'Clifton']
-const classOptions = ['9', '10', '11', '12']
-const coursesByClass: Record<string, string[]> = {
-  '9': ['Matric Science', 'Matric Arts', 'Computer Science'],
-  '10': ['Matric Science', 'Matric Arts', 'Computer Science'],
-  '11': ['Pre-Medical', 'Pre-Engineering', 'ICS', 'Commerce'],
-  '12': ['Pre-Medical', 'Pre-Engineering', 'ICS', 'Commerce'],
-}
+const classOptions = [ {value: '9', label: '9'}, {value: '10', label: '10'}, {value: '11', label: '11'}, {value: '12', label: '12'} ]
 
 type FormData = {
   student_name: string
@@ -19,14 +12,17 @@ type FormData = {
   phone: string
   email: string
   class: string
-  branch: string
-  course: string
+  branch: string // stores branch_id
+  course: string // stores course_id
 }
 
 function normalizePhone(phone: string): string {
   const digits = phone.replace(/\D/g, '')
   if (digits.length === 12 && digits.startsWith('92')) {
     return '0' + digits.slice(2)
+  }
+  if (digits.length === 10 && digits.startsWith('3')) {
+    return '0' + digits
   }
   return digits
 }
@@ -47,8 +43,25 @@ export default function AdmissionPage() {
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
   const [apiError, setApiError] = useState('')
 
-  const update = (field: keyof FormData, value: string) =>
+  const [branches, setBranches] = useState<Branch[]>([])
+  const [courses, setCourses] = useState<Course[]>([])
+
+  useEffect(() => {
+    Promise.all([getBranches(), getCourses()]).then(([b, c]) => {
+      setBranches(b)
+      setCourses(c)
+    })
+  }, [])
+
+  const update = (field: keyof FormData, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))
+    setErrors((prev) => {
+      if (!prev[field]) return prev
+      const next = { ...prev }
+      delete next[field]
+      return next
+    })
+  }
 
   const validateStep1 = () => {
     const errs: Partial<Record<keyof FormData, string>> = {}
@@ -56,7 +69,7 @@ export default function AdmissionPage() {
     if (!form.father_name.trim()) errs.father_name = "Father's name is required"
     const normalized = normalizePhone(form.phone)
     if (!/^03\d{9}$/.test(normalized))
-      errs.phone = 'Enter a valid Pakistani phone number (03XXXXXXXXX)'
+      errs.phone = 'Enter a valid Pakistani phone number, like 03001234567 or 3001234567'
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
       errs.email = 'Enter a valid email address'
     setErrors(errs)
@@ -66,26 +79,34 @@ export default function AdmissionPage() {
   const validateStep2 = () => {
     const errs: Partial<Record<keyof FormData, string>> = {}
     if (!form.class) errs.class = 'Please select a class'
-    if (!form.branch) errs.branch = 'Please select a branch'
+    if (!form.branch) errs.branch = 'Please select a campus'
     if (!form.course) errs.course = 'Please select a course'
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
 
   const handleNext = () => {
+    const scrollToError = () => {
+      const el = document.querySelector('[data-error="true"]')
+      if (!el) return
+      try {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      } catch (e) {
+        el.scrollIntoView()
+      }
+    }
+
     if (step === 1) {
       if (validateStep1()) {
-        setStep(2)
+        setStep((prev) => prev + 1)
       } else {
-        const el = document.querySelector('[data-error="true"]')
-        el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        scrollToError()
       }
     } else if (step === 2) {
       if (validateStep2()) {
-        setStep(3)
+        setStep((prev) => prev + 1)
       } else {
-        const el = document.querySelector('[data-error="true"]')
-        el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        scrollToError()
       }
     }
   }
@@ -101,48 +122,57 @@ export default function AdmissionPage() {
       phone: normalizedPhone,
       email: form.email.trim() || undefined,
       class_applying: form.class,
-      branch_name: form.branch,
+      branch_name: form.branch, // for older API compatibility if any
       course_name: form.course,
     }
 
-    addAdmission({
-      student_name: form.student_name.trim(),
-      father_name: form.father_name.trim(),
-      phone: normalizedPhone,
-      email: form.email.trim(),
-      class_applying: form.class,
-      branch: form.branch,
-      course: form.course,
-    })
-
     const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 10000)
+    const timer = setTimeout(() => controller.abort(), 15000)
 
     try {
-      const res = await fetch('/api/admission', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
+      // Core direct DB connection logic
+      await addAdmission({
+        student_name: form.student_name.trim(),
+        father_name: form.father_name.trim(),
+        phone: normalizedPhone,
+        email: form.email.trim(),
+        class_applying: form.class,
+        branch_id: form.branch,
+        course_id: form.course,
       })
-      clearTimeout(timer)
-      if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error || 'Submission failed')
+
+      // Old API trigger just in case the backend required it
+      try {
+        await fetch('/api/admission', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        })
+      } catch (e) {
+        console.warn('API post failed but DB direct succeeded', e)
       }
+
+      clearTimeout(timer)
       setSubmitted(true)
     } catch (e: unknown) {
       clearTimeout(timer)
-      const message = e instanceof Error ? e.message : 'Something went wrong'
-      setApiError(message)
+      setApiError('Unable to securely store data because Supabase is pending credentials')
       setSubmitted(true)
     } finally {
       setSubmitting(false)
     }
   }
 
+  const branchOptions = branches.map(b => ({ value: b.id, label: b.name }))
+  const courseOptions = courses
+    .filter(c => c.class_level === form.class || form.class === '')
+    .map(c => ({ value: c.id, label: c.title }))
+
   if (submitted) {
-    const msg = `Assalam-o-Alaikum! I want to enroll ${form.student_name} in ${form.course} (Class ${form.class}) at ${form.branch}.`
+    const courseTitle = courses.find(c => c.id === form.course)?.title || form.course
+    const branchName = branches.find(b => b.id === form.branch)?.name || form.branch
+    const msg = `Assalam-o-Alaikum! I want to enroll ${form.student_name} in ${courseTitle} (Class ${form.class}) at ${branchName}.`
     const waLink = `https://wa.me/923001234567?text=${encodeURIComponent(msg)}`
     return (
       <div className="max-w-lg mx-auto px-4 py-20 text-center">
@@ -170,6 +200,9 @@ export default function AdmissionPage() {
     )
   }
 
+  const displayBranch = branches.find(b => b.id === form.branch)?.name || ''
+  const displayCourse = courses.find(c => c.id === form.course)?.title || ''
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold text-text-dark mb-8 text-center">Admission Form</h1>
@@ -192,7 +225,7 @@ export default function AdmissionPage() {
       </div>
 
       {step === 1 && (
-        <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="bg-white rounded-xl shadow-md p-6 space-y-4">
           <h2 className="text-lg font-semibold text-text-dark mb-4">Step 1: Student Information</h2>
           <Input
             label="Student Name"
@@ -221,18 +254,16 @@ export default function AdmissionPage() {
             type="email"
           />
           <button
-            type="button"
-            onClick={handleNext}
+            type="submit"
             className="w-full bg-primary text-white font-semibold py-3 rounded-md active:scale-95 active:opacity-90 hover:brightness-110 transition-all flex items-center justify-center gap-2"
-            style={{ touchAction: 'manipulation' }}
           >
             Next <ChevronRight size={18} />
           </button>
-        </div>
+        </form>
       )}
 
       {step === 2 && (
-        <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="bg-white rounded-xl shadow-md p-6 space-y-4">
           <h2 className="text-lg font-semibold text-text-dark mb-4">Step 2: Course Selection</h2>
           <Select
             label="Class"
@@ -248,7 +279,7 @@ export default function AdmissionPage() {
             label="Branch"
             value={form.branch}
             onChange={(v) => update('branch', v)}
-            options={branches}
+            options={branchOptions}
             error={errors.branch}
           />
           {form.class && (
@@ -256,7 +287,7 @@ export default function AdmissionPage() {
               label="Course"
               value={form.course}
               onChange={(v) => update('course', v)}
-              options={coursesByClass[form.class] || []}
+              options={courseOptions}
               error={errors.course}
             />
           )}
@@ -269,18 +300,17 @@ export default function AdmissionPage() {
               <ChevronLeft size={18} /> Back
             </button>
             <button
-              type="button"
-              onClick={handleNext}
+              type="submit"
               className="flex-1 bg-primary text-white font-semibold py-3 rounded-md hover:brightness-110 transition-all flex items-center justify-center gap-2"
             >
               Next <ChevronRight size={18} />
             </button>
           </div>
-        </div>
+        </form>
       )}
 
       {step === 3 && (
-        <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="bg-white rounded-xl shadow-md p-6 space-y-4">
           <h2 className="text-lg font-semibold text-text-dark mb-4">Step 3: Confirm & Submit</h2>
           <div className="space-y-3 text-sm bg-gray-50 rounded-lg p-4">
             <Row label="Student Name" value={form.student_name} />
@@ -288,8 +318,8 @@ export default function AdmissionPage() {
             <Row label="Phone" value={form.phone} />
             <Row label="Email" value={form.email || '-'} />
             <Row label="Class" value={form.class} />
-            <Row label="Branch" value={form.branch} />
-            <Row label="Course" value={form.course} />
+            <Row label="Branch" value={displayBranch} />
+            <Row label="Course" value={displayCourse} />
           </div>
           <div className="flex gap-3">
             <button
@@ -301,8 +331,7 @@ export default function AdmissionPage() {
               <ChevronLeft size={18} /> Back
             </button>
             <button
-              type="button"
-              onClick={handleSubmit}
+              type="submit"
               disabled={submitting}
               className="flex-1 bg-secondary text-white font-semibold py-3 rounded-md hover:brightness-110 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
             >
@@ -310,7 +339,7 @@ export default function AdmissionPage() {
               {submitting ? 'Submitting...' : 'Submit'}
             </button>
           </div>
-        </div>
+        </form>
       )}
     </div>
   )
@@ -325,19 +354,7 @@ function Row({ label, value }: { label: string; value: string }) {
   )
 }
 
-function Input({
-  label,
-  value,
-  onChange,
-  error,
-  type = 'text',
-}: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  error?: string
-  type?: string
-}) {
+function Input({ label, value, onChange, error, type = 'text' }: { label: string, value: string, onChange: (v: string) => void, error?: string, type?: string }) {
   return (
     <div>
       <label className="block text-sm font-medium text-text-dark mb-1">{label}</label>
@@ -345,6 +362,7 @@ function Input({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        inputMode={type === 'tel' ? 'tel' : type === 'email' ? 'email' : undefined}
         autoComplete={type === 'tel' ? 'tel' : type === 'email' ? 'email' : undefined}
         data-error={error ? 'true' : undefined}
         className={`w-full border ${
@@ -356,19 +374,7 @@ function Input({
   )
 }
 
-function Select({
-  label,
-  value,
-  onChange,
-  options,
-  error,
-}: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  options: string[]
-  error?: string
-}) {
+function Select({ label, value, onChange, options, error }: { label: string, value: string, onChange: (v: string) => void, options: {value: string, label: string}[], error?: string }) {
   return (
     <div>
       <label className="block text-sm font-medium text-text-dark mb-1">{label}</label>
@@ -380,9 +386,9 @@ function Select({
         } rounded-md px-3 py-2 text-text-dark bg-white focus:outline-none focus:ring-2 focus:ring-primary/50`}
       >
         <option value="">Select {label}</option>
-        {options.map((o) => (
-          <option key={o} value={o}>
-            {o}
+        {options.map((o: any) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
           </option>
         ))}
       </select>

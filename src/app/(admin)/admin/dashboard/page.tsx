@@ -1,17 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Users, FileText, BookOpen, Building2, TrendingUp, Clock, CheckCircle, XCircle } from 'lucide-react'
 import { getAdmissions, type LocalAdmission } from '@/lib/db'
 
 export default function DashboardPage() {
-  const [admissions] = useState<LocalAdmission[]>(() =>
-    typeof window !== 'undefined' ? getAdmissions() : []
-  )
+  const [admissions, setAdmissions] = useState<LocalAdmission[]>([])
+  
+  useEffect(() => {
+    getAdmissions().then(setAdmissions)
+  }, [])
 
-  const pending = admissions.filter((a) => a.status === 'Pending').length
-  const approved = admissions.filter((a) => a.status === 'Approved').length
-  const rejected = admissions.filter((a) => a.status === 'Rejected').length
+  const pending = admissions.filter((a) => a.status === 'pending').length
+  const approved = admissions.filter((a) => a.status === 'approved').length
+  const rejected = admissions.filter((a) => a.status === 'rejected').length
   const total = admissions.length
 
   const overviewCards = [

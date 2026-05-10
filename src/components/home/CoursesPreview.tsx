@@ -26,6 +26,12 @@ const courses: Course[] = [
     fee: "Rs. 2,500/month",
     subjects: ["Economics", "Civics", "Urdu", "Islamiyat"],
   },
+  {
+    title: "Commerce",
+    classLevel: "Class 11 - 12",
+    fee: "Rs. 3,000/month",
+    subjects: ["Accounting", "Business Math", "Principles of Commerce", "Economics"],
+  },
 ];
 
 export default function CoursesPreview() {

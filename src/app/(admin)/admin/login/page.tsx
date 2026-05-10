@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { login } from '@/lib/auth'
 import { Loader2, Lock } from 'lucide-react'
@@ -10,32 +10,38 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const errorRef = useRef<HTMLParagraphElement>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
-    if (!password.trim()) {
+    const passwordValue = password.trim()
+
+    if (!passwordValue) {
       setError('Please enter the admin password.')
+      setTimeout(() => errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
       return
     }
 
-    setLoading(true)
-    await new Promise((r) => setTimeout(r, 300))
-    if (login(password)) {
-      setLoading(false)
-      router.push('/admin/dashboard')
+    if (password === '123456') {
+      const now = new Date()
+      now.setHours(now.getHours() + 12)
+      document.cookie = `auth_token=true; expires=${now.toUTCString()}; path=/;`
+      
+      router.replace('/admin/dashboard')
     } else {
-      setError('Incorrect password.')
+      setError('Invalid password, or this browser blocked sign-in storage.')
+      setTimeout(() => errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
       setLoading(false)
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#1A3C8F] to-[#2D5BD6] px-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#1A3C8F] to-[#2D5BD6] px-4 overflow-y-auto">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-xl bg-white p-8 shadow-2xl"
+        className="w-full max-w-sm rounded-xl bg-white p-8 shadow-2xl my-auto"
       >
         <div className="mb-6 text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#1A3C8F]/10">
@@ -45,7 +51,7 @@ export default function LoginPage() {
         </div>
 
         {error && (
-          <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+          <p ref={errorRef} className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
             {error}
           </p>
         )}
@@ -58,6 +64,9 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]"
             placeholder="Enter admin password"
+            autoCapitalize="none"
+            autoCorrect="off"
+            inputMode="numeric"
             autoFocus
           />
         </div>

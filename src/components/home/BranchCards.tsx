@@ -1,43 +1,11 @@
 import { MapPin, Phone, ExternalLink, MessageCircle } from "lucide-react";
 import Link from "next/link";
 
-interface Branch {
-  name: string;
-  city: string;
-  address: string;
-  phone: string;
-  directionsUrl: string;
-  whatsappNumber: string;
-}
+import { getBranches } from '@/lib/db'
 
-const branches: Branch[] = [
-  {
-    name: "Main Campus",
-    city: "Karachi",
-    address: "Block 13-D, Gulshan-e-Iqbal, Main University Road, Karachi",
-    phone: "0300-1234567",
-    directionsUrl: "https://maps.google.com/?q=Gulshan+e+Iqbal+Karachi",
-    whatsappNumber: "923001234567",
-  },
-  {
-    name: "North Campus",
-    city: "Karachi",
-    address: "Sector 5/B, Buffer Zone, North Karachi, Karachi",
-    phone: "0300-7654321",
-    directionsUrl: "https://maps.google.com/?q=Buffer+Zone+North+Karachi",
-    whatsappNumber: "923007654321",
-  },
-  {
-    name: "City Campus",
-    city: "Lahore",
-    address: "Main Boulevard, Gulberg III, Lahore",
-    phone: "042-1112233",
-    directionsUrl: "https://maps.google.com/?q=Gulberg+Lahore",
-    whatsappNumber: "92421112233",
-  },
-];
-
-export default function BranchCards() {
+export default async function BranchCards() {
+  const rawBranches = await getBranches()
+  const branches = rawBranches.length > 0 ? rawBranches : []
   return (
     <section className="bg-background px-6 py-20 sm:px-12 lg:px-20">
       <div className="mx-auto max-w-7xl">
@@ -69,7 +37,7 @@ export default function BranchCards() {
               </div>
               <div className="flex gap-3">
                 <Link
-                  href={branch.directionsUrl}
+                  href={branch.map_link || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-primary px-4 py-2 text-sm font-medium text-primary transition hover:bg-primary hover:text-white"
@@ -78,7 +46,7 @@ export default function BranchCards() {
                   Get Directions
                 </Link>
                 <Link
-                  href={`https://wa.me/${branch.whatsappNumber}`}
+                  href={`https://wa.me/${branch.phone?.replace(/[^0-9]/g, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-accent/90"

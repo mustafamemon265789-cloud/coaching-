@@ -8,7 +8,7 @@ import Testimonials from '@/components/home/Testimonials'
 import BranchCards from '@/components/home/BranchCards'
 
 export const metadata: Metadata = {
-  title: 'Sir Azan Coaching Center | Where Students Become Toppers',
+  title: 'Sir Aazan Coaching Center | Where Students Become Toppers',
 }
 
 export default function HomePage() {

@@ -9,8 +9,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Sir Azan Coaching Center | Where Students Become Toppers",
-  description: "Sir Azan Coaching Center — Expert teachers, proven results. Join Pakistan's leading coaching institute for Class 9 to Intermediate.",
+  title: "Sir Aazan Coaching Center | Where Students Become Toppers",
+  description: "Sir Aazan Coaching Center — Expert teachers, proven results. Join Pakistan's leading coaching institute for Class 9 to Intermediate.",
 };
 
 export default function RootLayout({
@@ -20,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
       <html lang="en" className={`${inter.variable} h-full scroll-smooth`} data-scroll-behavior="smooth" suppressHydrationWarning>
-      <body className="min-h-full flex flex-col font-sans antialiased">
+      <body className="min-h-full flex flex-col font-sans antialiased" suppressHydrationWarning>
         {children}
       </body>
     </html>

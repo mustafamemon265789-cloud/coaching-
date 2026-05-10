@@ -10,21 +10,20 @@ import { isAuthenticated } from '@/lib/auth'
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const [mounted, setMounted] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
   const isLoginPage = pathname === '/admin/login'
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    if (isLoginPage) return
 
-  useEffect(() => {
-    if (!mounted && !isLoginPage) return
-    if (!isLoginPage && !isAuthenticated()) {
-      router.push('/admin/login')
+    if (isAuthenticated()) {
+      queueMicrotask(() => setAuthChecked(true))
+    } else {
+      router.replace('/admin/login')
     }
-  }, [mounted, isLoginPage, router])
+  }, [isLoginPage, router])
 
-  if (!mounted && !isLoginPage) return null
+  if (!isLoginPage && !authChecked) return null
 
   return (
     <ToastProvider>

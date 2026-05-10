@@ -38,7 +38,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-xl font-bold mb-2">Sir Azan Coaching Center</h3>
+            <h3 className="text-xl font-bold mb-2">Sir Aazan Coaching Center</h3>
             <p className="text-white/70 text-sm">Where Students Become Toppers</p>
             <div className="flex items-center gap-3 mt-5">
               {socialLinks.map(({ label, href, path }) => (
@@ -113,7 +113,7 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <p className="text-center text-white/60 text-xs">
-            &copy; {new Date().getFullYear()} Sir Azan Coaching Center. All rights reserved.
+            &copy; {new Date().getFullYear()} Sir Aazan Coaching Center. All rights reserved.
           </p>
           <p className="text-center mt-2">
             <Link
