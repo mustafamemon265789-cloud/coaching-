@@ -45,7 +45,7 @@ export default function StatsPage() {
               <input
                 value={s.label}
                 onChange={(e) => update(s.key, 'label', e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               />
               <label className="block text-sm font-medium text-gray-700">
                 Value
@@ -56,7 +56,7 @@ export default function StatsPage() {
                 onChange={(e) =>
                   update(s.key, 'value', parseInt(e.target.value) || 0)
                 }
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               />
             </div>
           ))}
@@ -64,7 +64,7 @@ export default function StatsPage() {
 
         <button
           onClick={handleSave}
-          className="mt-6 flex items-center gap-2 rounded-lg bg-[#1A3C8F] px-4 py-2 text-sm font-medium text-white hover:bg-[#15307a] transition-colors"
+          className="mt-6 flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
         >
           <Save className="h-4 w-4" /> Save Changes
         </button>

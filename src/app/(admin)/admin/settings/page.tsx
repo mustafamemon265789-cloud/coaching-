@@ -26,7 +26,7 @@ const defaultSettings: Settings = {
   yearsOfExcellence: '10+',
 }
 
-const inputCls = 'rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F] outline-none w-full'
+const inputCls = 'rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none w-full'
 
 export default function SettingsPage() {
   const { showToast } = useToast()
@@ -47,7 +47,7 @@ export default function SettingsPage() {
 
       {/* Section 1 — Brand & Identity */}
       <section className="rounded-xl border bg-white shadow-sm p-6 space-y-5">
-        <div className="flex items-center gap-2 text-[#1A3C8F] font-semibold text-lg">
+        <div className="flex items-center gap-2 text-primary font-semibold text-lg">
           <Globe size={20} />
           <h2>Brand &amp; Identity</h2>
         </div>
@@ -73,7 +73,7 @@ export default function SettingsPage() {
 
       {/* Section 2 — Contact Info */}
       <section className="rounded-xl border bg-white shadow-sm p-6 space-y-5">
-        <div className="flex items-center gap-2 text-[#1A3C8F] font-semibold text-lg">
+        <div className="flex items-center gap-2 text-primary font-semibold text-lg">
           <Phone size={20} />
           <h2>Contact Info</h2>
         </div>
@@ -124,7 +124,7 @@ export default function SettingsPage() {
 
       {/* Section 3 — Home Page Stats */}
       <section className="rounded-xl border bg-white shadow-sm p-6 space-y-5">
-        <div className="flex items-center gap-2 text-[#1A3C8F] font-semibold text-lg">
+        <div className="flex items-center gap-2 text-primary font-semibold text-lg">
           <FileText size={20} />
           <h2>Home Page Stats</h2>
         </div>
@@ -153,7 +153,7 @@ export default function SettingsPage() {
       <div className="flex justify-end">
         <button
           onClick={handleSave}
-          className="flex items-center gap-2 bg-[#1A3C8F] hover:bg-[#15306e] text-white font-medium px-6 py-2.5 rounded-lg transition-colors text-sm"
+          className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white font-medium px-6 py-2.5 rounded-lg transition-colors text-sm"
         >
           <Save size={16} />
           Save All Settings

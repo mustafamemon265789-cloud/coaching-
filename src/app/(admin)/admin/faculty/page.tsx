@@ -99,25 +99,25 @@ export default function FacultyPage() {
             placeholder="Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]"
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
           <input
             placeholder="Qualification"
             value={qualification}
             onChange={(e) => setQualification(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]"
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
           <input
             placeholder="Subject"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]"
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
           <input
             placeholder="Image URL (optional)"
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]"
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
         </div>
         <textarea
@@ -125,11 +125,11 @@ export default function FacultyPage() {
           rows={3}
           value={bio}
           onChange={(e) => setBio(e.target.value)}
-          className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]"
+          className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
         />
         <button
           type="submit"
-          className="mt-4 rounded-lg bg-[#1A3C8F] px-4 py-2 text-sm font-medium text-white hover:bg-[#15307a] transition-colors"
+          className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
         >
           Add Faculty Member
         </button>
@@ -154,38 +154,38 @@ export default function FacultyPage() {
                   <input
                     value={editForm.name}
                     onChange={(e) => setEditForm((ef) => ef ? { ...ef, name: e.target.value } : null)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                     placeholder="Name"
                   />
                   <input
                     value={editForm.qualification}
                     onChange={(e) => setEditForm((ef) => ef ? { ...ef, qualification: e.target.value } : null)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                     placeholder="Qualification"
                   />
                   <input
                     value={editForm.subject}
                     onChange={(e) => setEditForm((ef) => ef ? { ...ef, subject: e.target.value } : null)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                     placeholder="Subject"
                   />
                   <input
                     value={editForm.image_url}
                     onChange={(e) => setEditForm((ef) => ef ? { ...ef, image_url: e.target.value } : null)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                     placeholder="Image URL"
                   />
                   <textarea
                     value={editForm.bio}
                     onChange={(e) => setEditForm((ef) => ef ? { ...ef, bio: e.target.value } : null)}
                     rows={3}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                     placeholder="Bio"
                   />
                   <div className="flex gap-2">
                     <button
                       onClick={saveEdit}
-                      className="flex items-center gap-1 rounded-lg bg-[#1A3C8F] px-3 py-2 text-xs font-medium text-white hover:bg-[#15307a]"
+                      className="flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-white hover:bg-primary/90"
                     >
                       <Save className="h-3.5 w-3.5" /> Save
                     </button>
@@ -201,7 +201,7 @@ export default function FacultyPage() {
                 <>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      <GraduationCap className="h-5 w-5 text-[#1A3C8F]" />
+                      <GraduationCap className="h-5 w-5 text-primary" />
                       <h3 className="font-bold text-gray-900">{f.name}</h3>
                     </div>
                     <span
@@ -216,11 +216,11 @@ export default function FacultyPage() {
                   </div>
                   <div className="mt-3 space-y-1.5 text-sm text-gray-600">
                     <p className="flex items-center gap-2">
-                      <BookOpen className="h-4 w-4 shrink-0 text-[#F97316]" />
+                      <BookOpen className="h-4 w-4 shrink-0 text-secondary" />
                       {f.qualification}
                     </p>
                     <p className="flex items-center gap-2">
-                      <BookOpen className="h-4 w-4 shrink-0 text-[#F97316]" />
+                      <BookOpen className="h-4 w-4 shrink-0 text-secondary" />
                       {f.subject}
                     </p>
                   </div>
@@ -228,7 +228,7 @@ export default function FacultyPage() {
                   <div className="mt-4 flex items-center gap-2">
                     <button
                       onClick={() => startEdit(f)}
-                      className="flex items-center gap-1 text-sm font-medium text-[#1A3C8F] hover:underline"
+                      className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
                     >
                       <Edit2 className="h-4 w-4" /> Edit
                     </button>

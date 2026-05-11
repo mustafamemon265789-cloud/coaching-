@@ -77,21 +77,21 @@ export default function BranchesPage() {
   const formFields = () => (
     <div className="space-y-3">
       <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]" placeholder="Branch name *" />
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Branch name *" />
       <div className="grid grid-cols-2 gap-3">
         <input value={form.address} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]" placeholder="Address *" />
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Address *" />
         <input value={form.city} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]" placeholder="City *" />
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="City *" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]" placeholder="Phone *" />
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Phone *" />
         <input value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]" placeholder="Email" />
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Email" />
       </div>
       <input value={form.map_link} onChange={(e) => setForm((f) => ({ ...f, map_link: e.target.value }))}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]" placeholder="Google Maps link" />
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Google Maps link" />
     </div>
   )
 
@@ -100,7 +100,7 @@ export default function BranchesPage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Branches</h1>
         <button onClick={openAddForm}
-          className="flex items-center gap-2 rounded-lg bg-[#1A3C8F] px-4 py-2 text-sm font-medium text-white hover:bg-[#15307a] transition-colors">
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors">
           <Plus className="h-4 w-4" /> Add Branch
         </button>
       </div>
@@ -110,7 +110,7 @@ export default function BranchesPage() {
           <h2 className="mb-4 text-lg font-semibold text-gray-800">New Branch</h2>
           {formFields()}
           <div className="mt-4 flex gap-2">
-            <button type="button" onClick={handleAdd} className="rounded-lg bg-[#1A3C8F] px-4 py-2 text-sm font-medium text-white hover:bg-[#15307a] transition-colors">
+            <button type="button" onClick={handleAdd} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors">
               Save Branch
             </button>
             <button type="button" onClick={() => setShowAddForm(false)}
@@ -131,7 +131,7 @@ export default function BranchesPage() {
                   {formFields()}
                   <div className="mt-4 flex gap-2">
                     <button onClick={saveEdit}
-                      className="flex items-center gap-1 rounded-lg bg-[#1A3C8F] px-3 py-2 text-xs font-medium text-white hover:bg-[#15307a]">
+                      className="flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-white hover:bg-primary/90">
                       <Save className="h-3.5 w-3.5" /> Save
                     </button>
                     <button onClick={cancelEdit}
@@ -145,14 +145,14 @@ export default function BranchesPage() {
                   <h3 className="text-lg font-semibold text-gray-900">{b.name}</h3>
                   <span className="inline-block mt-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">{b.city}</span>
                   <div className="mt-3 space-y-2 text-sm text-gray-600">
-                    <p className="flex items-center gap-2"><MapPin className="h-4 w-4 shrink-0 text-[#F97316]" /> {b.address}</p>
-                    <p className="flex items-center gap-2"><Phone className="h-4 w-4 shrink-0 text-[#F97316]" /> {b.phone}</p>
-                    <p className="flex items-center gap-2"><Mail className="h-4 w-4 shrink-0 text-[#F97316]" /> {b.email}</p>
-                    {b.map_link && <p className="flex items-center gap-2"><Globe className="h-4 w-4 shrink-0 text-[#F97316]" /> <a href={b.map_link} target="_blank" rel="noopener noreferrer" className="text-[#1A3C8F] hover:underline">View on Map</a></p>}
+                    <p className="flex items-center gap-2"><MapPin className="h-4 w-4 shrink-0 text-secondary" /> {b.address}</p>
+                    <p className="flex items-center gap-2"><Phone className="h-4 w-4 shrink-0 text-secondary" /> {b.phone}</p>
+                    <p className="flex items-center gap-2"><Mail className="h-4 w-4 shrink-0 text-secondary" /> {b.email}</p>
+                    {b.map_link && <p className="flex items-center gap-2"><Globe className="h-4 w-4 shrink-0 text-secondary" /> <a href={b.map_link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">View on Map</a></p>}
                   </div>
                   <div className="mt-4 flex gap-2">
                     <button onClick={() => startEdit(b)}
-                      className="flex items-center gap-1 text-sm font-medium text-[#1A3C8F] hover:underline">
+                      className="flex items-center gap-1 text-sm font-medium text-primary hover:underline">
                       <Edit2 className="h-4 w-4" /> Edit
                     </button>
                     <button onClick={() => setDeleteId(b.id)}

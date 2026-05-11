@@ -88,24 +88,24 @@ export default function TestimonialsPage() {
         </h2>
         <div className="grid gap-3 sm:grid-cols-3">
           <input placeholder="Student Name *" value={student_name} onChange={(e) => setName(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]" />
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
           <input placeholder="Achievement (e.g. Got 95%)" value={achievement} onChange={(e) => setAchievement(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]" />
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
           <input placeholder="Class Level (e.g. Class 10)" value={class_level} onChange={(e) => setClassLevel(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]" />
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
         </div>
         <div className="mt-3 flex items-center gap-1">
           <span className="mr-2 text-sm text-gray-600">Rating:</span>
           {[1, 2, 3, 4, 5].map((star) => (
             <button key={star} type="button" onClick={() => setRating(star)}>
-              <Star className={`h-5 w-5 ${star <= rating ? 'fill-[#F97316] text-[#F97316]' : 'text-gray-300'}`} />
+              <Star className={`h-5 w-5 ${star <= rating ? 'fill-secondary text-secondary' : 'text-gray-300'}`} />
             </button>
           ))}
         </div>
         <textarea placeholder="Testimonial quote *" rows={3} value={quote} onChange={(e) => setQuote(e.target.value)}
-          className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]" />
+          className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
         <div className="mt-4 flex gap-2">
-          <button type="submit" className="rounded-lg bg-[#1A3C8F] px-4 py-2 text-sm font-medium text-white hover:bg-[#15307a] transition-colors">
+          <button type="submit" className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors">
             {editingId ? 'Update Testimonial' : 'Add Testimonial'}
           </button>
           {editingId && (
@@ -123,7 +123,7 @@ export default function TestimonialsPage() {
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <Quote className="h-4 w-4 text-[#F97316]" />
+                  <Quote className="h-4 w-4 text-secondary" />
                   <h3 className="font-semibold text-gray-900">{t.student_name}</h3>
                   <span className="text-xs text-gray-400">| {t.class_level}</span>
                 </div>
@@ -134,7 +134,7 @@ export default function TestimonialsPage() {
                 )}
                 <div className="mt-1 flex gap-0.5">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <Star key={star} className={`h-4 w-4 ${star <= t.rating ? 'fill-[#F97316] text-[#F97316]' : 'text-gray-300'}`} />
+                    <Star key={star} className={`h-4 w-4 ${star <= t.rating ? 'fill-secondary text-secondary' : 'text-gray-300'}`} />
                   ))}
                 </div>
                 <p className="mt-2 text-sm italic text-gray-600">&ldquo;{t.quote}&rdquo;</p>

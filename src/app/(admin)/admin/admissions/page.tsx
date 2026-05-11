@@ -99,7 +99,7 @@ export default function AdmissionsPage() {
                 onClick={() => setFilter(s)}
                 className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors capitalize ${
                   filter === s
-                    ? 'bg-[#1A3C8F] text-white'
+                    ? 'bg-primary text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
