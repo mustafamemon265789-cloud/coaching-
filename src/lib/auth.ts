@@ -87,7 +87,15 @@ export function logout(): void {
 }
 
 export function isAuthenticated(): boolean {
-  return true
+  if (typeof window === 'undefined') return false
+  const data = getItem(AUTH_KEY)
+  if (!data) return false
+  try {
+    const parsed = JSON.parse(data)
+    return !!(parsed.loggedInAt)
+  } catch {
+    return false
+  }
 }
 
 export function changePassword(currentPassword: string, newPassword: string): string | null {
