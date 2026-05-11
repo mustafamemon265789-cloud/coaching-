@@ -36,7 +36,7 @@ export default function Sidebar() {
   const linkClass = (href: string) =>
     `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
       pathname === href
-        ? 'bg-[#1A3C8F] text-white'
+        ? 'bg-primary text-white'
         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
     }`
 
@@ -56,7 +56,7 @@ export default function Sidebar() {
         }`}
       >
         <div className="flex h-16 items-center justify-between border-b px-6">
-          <span className="text-xl font-bold text-[#1A3C8F]">Azan Coaching</span>
+          <span className="text-xl font-bold text-primary">Azan Coaching</span>
           <button
             onClick={() => setMobileOpen(false)}
             className="rounded-md p-1 hover:bg-gray-100 lg:hidden"
@@ -74,7 +74,7 @@ export default function Sidebar() {
                 href={href}
                 className={`rounded-lg p-2.5 transition-colors ${
                   pathname === href
-                    ? 'bg-[#1A3C8F] text-white'
+                    ? 'bg-primary text-white'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
                 title={navItems.find((i) => i.href === href)!.label}

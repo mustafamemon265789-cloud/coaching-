@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import { useToast } from '@/components/admin/ToastProvider'
-import { changePassword } from '@/lib/auth'
-import { Save, Globe, Phone, Mail, MapPin, MessageCircle, Hash, Type, FileText, Lock } from 'lucide-react'
+import { Save, Globe, Phone, Mail, MapPin, MessageCircle, Hash, Type, FileText } from 'lucide-react'
 
 type Settings = Record<string, string>
 
@@ -32,10 +31,6 @@ const inputCls = 'rounded-lg border border-gray-300 px-3 py-2 text-sm focus:bord
 export default function SettingsPage() {
   const { showToast } = useToast()
   const [settings, setSettings] = useState<Settings>({ ...defaultSettings })
-  const [pwCurrent, setPwCurrent] = useState('')
-  const [pwNew, setPwNew] = useState('')
-  const [pwError, setPwError] = useState('')
-  const [pwSuccess, setPwSuccess] = useState('')
 
   const update = (key: string, value: string) => {
     setSettings(prev => ({ ...prev, [key]: value }))
@@ -45,18 +40,6 @@ export default function SettingsPage() {
     showToast('success', 'All settings saved successfully.')
   }
 
-  const handleChangePassword = () => {
-    setPwError('')
-    setPwSuccess('')
-    const err = changePassword(pwCurrent, pwNew)
-    if (err) {
-      setPwError(err)
-    } else {
-      setPwSuccess('Password updated successfully.')
-      setPwCurrent('')
-      setPwNew('')
-    }
-  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
@@ -165,47 +148,6 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      {/* Section 4 — Change Password */}
-      <section className="rounded-xl border bg-white shadow-sm p-6 space-y-5">
-        <div className="flex items-center gap-2 text-[#1A3C8F] font-semibold text-lg">
-          <Lock size={20} />
-          <h2>Change Admin Password</h2>
-        </div>
-        <p className="text-sm text-gray-500">Default password is <strong>123456</strong></p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-gray-700">Current Password</label>
-            <input
-              type="password"
-              value={pwCurrent}
-              onChange={e => setPwCurrent(e.target.value)}
-              className={inputCls}
-              placeholder="Current password"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-gray-700">New Password</label>
-            <input
-              type="password"
-              value={pwNew}
-              onChange={e => setPwNew(e.target.value)}
-              className={inputCls}
-              placeholder="New password (min 4 chars)"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5 justify-end">
-            <button
-              onClick={handleChangePassword}
-              className="flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-900 text-white font-medium px-4 py-2 rounded-lg transition-colors text-sm"
-            >
-              <Lock size={14} />
-              Update Password
-            </button>
-          </div>
-        </div>
-        {pwError && <p className="text-sm text-red-500">{pwError}</p>}
-        {pwSuccess && <p className="text-sm text-green-600">{pwSuccess}</p>}
-      </section>
 
       {/* Save Button */}
       <div className="flex justify-end">
