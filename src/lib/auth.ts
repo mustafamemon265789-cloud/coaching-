@@ -72,7 +72,7 @@ function removeItem(key: string): void {
 }
 
 function getStoredPassword(): string {
-  return getItem(PASSWORD_KEY) || '1111'
+  return getItem(PASSWORD_KEY) || process.env.NEXT_PUBLIC_ADMIN_PASSWORD || '1111'
 }
 
 export function login(password: string): boolean {
