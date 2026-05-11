@@ -1,10 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { Check, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react'
-import { addAdmission, getBranches, getCourses, type Branch, type Course } from '@/lib/db'
+import { getBranches, getCourses, type Branch, type Course } from '@/lib/db'
 
-const classOptions = [ {value: '9', label: '9'}, {value: '10', label: '10'}, {value: '11', label: '11'}, {value: '12', label: '12'} ]
+const classOptions = [
+  { value: '9', label: '9' },
+  { value: '10', label: '10' },
+  { value: '11', label: '11' },
+  { value: '12', label: '12' },
+]
 
 type FormData = {
   student_name: string
@@ -16,8 +21,21 @@ type FormData = {
   course: string // stores course_id
 }
 
+const initialForm: FormData = {
+  student_name: '',
+  father_name: '',
+  phone: '',
+  email: '',
+  class: '',
+  branch: '',
+  course: '',
+}
+
 function normalizePhone(phone: string): string {
   const digits = phone.replace(/\D/g, '')
+  if (digits.length === 14 && digits.startsWith('0092')) {
+    return '0' + digits.slice(4)
+  }
   if (digits.length === 12 && digits.startsWith('92')) {
     return '0' + digits.slice(2)
   }
@@ -29,15 +47,7 @@ function normalizePhone(phone: string): string {
 
 export default function AdmissionPage() {
   const [step, setStep] = useState(1)
-  const [form, setForm] = useState<FormData>({
-    student_name: '',
-    father_name: '',
-    phone: '',
-    email: '',
-    class: '',
-    branch: '',
-    course: '',
-  })
+  const [form, setForm] = useState<FormData>(initialForm)
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
@@ -47,11 +57,43 @@ export default function AdmissionPage() {
   const [courses, setCourses] = useState<Course[]>([])
 
   useEffect(() => {
-    Promise.all([getBranches(), getCourses()]).then(([b, c]) => {
-      setBranches(b)
-      setCourses(c)
-    })
+    let isMounted = true
+
+    void Promise.all([getBranches(), getCourses()])
+      .then(([b, c]) => {
+        if (!isMounted) return
+        setBranches(b)
+        setCourses(c)
+      })
+      .catch((error) => {
+        console.error('Failed to load admission options', error)
+      })
+
+    try {
+      const saved = sessionStorage.getItem('admission_form')
+      if (saved) {
+        const parsed = JSON.parse(saved) as Partial<{ form: Partial<FormData>; step: number }>
+        queueMicrotask(() => {
+          if (!isMounted) return
+          setForm({ ...initialForm, ...parsed.form })
+          setStep(parsed.step && parsed.step >= 1 && parsed.step <= 3 ? parsed.step : 1)
+        })
+      }
+    } catch (error) {
+      console.error('Failed to load saved form', error)
+    }
+
+    return () => {
+      isMounted = false
+    }
   }, [])
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('admission_form', JSON.stringify({ form, step }))
+    } catch {
+    }
+  }, [form, step])
 
   const update = (field: keyof FormData, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -85,33 +127,57 @@ export default function AdmissionPage() {
     return Object.keys(errs).length === 0
   }
 
-  const handleNext = () => {
-    const scrollToError = () => {
-      const el = document.querySelector('[data-error="true"]')
-      if (!el) return
-      try {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      } catch (e) {
-        el.scrollIntoView()
-      }
+  const scrollToFirstError = () => {
+    const el = document.querySelector('[data-error="true"]')
+    if (!el) return
+    try {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    } catch {
+      el.scrollIntoView()
     }
+  }
+
+  const moveToStep = (nextStep: number) => {
+    setStep(nextStep)
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    })
+  }
+
+  const handleNext = (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault()
 
     if (step === 1) {
       if (validateStep1()) {
-        setStep((prev) => prev + 1)
+        moveToStep(2)
       } else {
-        scrollToError()
+        scrollToFirstError()
       }
     } else if (step === 2) {
       if (validateStep2()) {
-        setStep((prev) => prev + 1)
+        moveToStep(3)
       } else {
-        scrollToError()
+        scrollToFirstError()
       }
     }
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault()
+    if (submitting) return
+
+    if (!validateStep1()) {
+      moveToStep(1)
+      setTimeout(scrollToFirstError, 100)
+      return
+    }
+
+    if (!validateStep2()) {
+      moveToStep(2)
+      setTimeout(scrollToFirstError, 100)
+      return
+    }
+
     setSubmitting(true)
     setApiError('')
 
@@ -122,42 +188,35 @@ export default function AdmissionPage() {
       phone: normalizedPhone,
       email: form.email.trim() || undefined,
       class_applying: form.class,
-      branch_name: form.branch, // for older API compatibility if any
-      course_name: form.course,
+      branch_id: form.branch,
+      course_id: form.course,
+      branch_name: branches.find(b => b.id === form.branch)?.name || form.branch,
+      course_name: courses.find(c => c.id === form.course)?.title || form.course,
     }
 
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), 15000)
 
     try {
-      // Core direct DB connection logic
-      await addAdmission({
-        student_name: form.student_name.trim(),
-        father_name: form.father_name.trim(),
-        phone: normalizedPhone,
-        email: form.email.trim(),
-        class_applying: form.class,
-        branch_id: form.branch,
-        course_id: form.course,
+      const response = await fetch('/api/admission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
       })
 
-      // Old API trigger just in case the backend required it
-      try {
-        await fetch('/api/admission', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          signal: controller.signal,
-        })
-      } catch (e) {
-        console.warn('API post failed but DB direct succeeded', e)
+      if (!response.ok) {
+        const result = await response.json().catch(() => null)
+        throw new Error(result?.error || 'Admission submission failed')
       }
 
       clearTimeout(timer)
+      sessionStorage.removeItem('admission_form')
       setSubmitted(true)
     } catch (e: unknown) {
       clearTimeout(timer)
-      setApiError('Unable to securely store data because Supabase is pending credentials')
+      const message = e instanceof Error ? e.message : 'Unable to submit admission right now'
+      setApiError(message)
       setSubmitted(true)
     } finally {
       setSubmitting(false)
@@ -204,29 +263,29 @@ export default function AdmissionPage() {
   const displayCourse = courses.find(c => c.id === form.course)?.title || ''
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold text-text-dark mb-8 text-center">Admission Form</h1>
+    <div className="max-w-2xl mx-auto px-4 py-8 md:py-12">
+      <h1 className="text-2xl md:text-3xl font-bold text-text-dark mb-6 md:mb-8 text-center">Admission Form</h1>
 
-      <div className="flex items-center justify-center gap-2 mb-10">
+      <div className="flex items-center justify-center gap-2 mb-8 md:mb-10">
         {[1, 2, 3].map((s) => (
           <div key={s} className="flex items-center gap-2">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+              className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm font-bold ${
                 step >= s ? 'bg-primary text-white' : 'bg-gray-200 text-text-muted'
               }`}
             >
               {s}
             </div>
             {s < 3 && (
-              <div className={`w-12 h-1 rounded ${step > s ? 'bg-primary' : 'bg-gray-200'}`} />
+              <div className={`w-8 md:w-12 h-1 rounded ${step > s ? 'bg-primary' : 'bg-gray-200'}`} />
             )}
           </div>
         ))}
       </div>
 
       {step === 1 && (
-        <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="bg-white rounded-xl shadow-md p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-text-dark mb-4">Step 1: Student Information</h2>
+        <form onSubmit={handleNext} noValidate className="bg-white rounded-xl shadow-md p-4 md:p-6 space-y-4">
+          <h2 className="text-base md:text-lg font-semibold text-text-dark mb-2 md:mb-4">Step 1: Student Information</h2>
           <Input
             label="Student Name"
             value={form.student_name}
@@ -255,7 +314,8 @@ export default function AdmissionPage() {
           />
           <button
             type="submit"
-            className="w-full bg-primary text-white font-semibold py-3 rounded-md active:scale-95 active:opacity-90 hover:brightness-110 transition-all flex items-center justify-center gap-2"
+            className="w-full bg-primary text-white font-semibold py-3.5 rounded-md active:scale-[0.98] active:opacity-90 hover:brightness-110 transition-all flex items-center justify-center gap-2 select-none"
+            style={{ touchAction: 'manipulation' }}
           >
             Next <ChevronRight size={18} />
           </button>
@@ -263,8 +323,8 @@ export default function AdmissionPage() {
       )}
 
       {step === 2 && (
-        <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="bg-white rounded-xl shadow-md p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-text-dark mb-4">Step 2: Course Selection</h2>
+        <form onSubmit={handleNext} noValidate className="bg-white rounded-xl shadow-md p-4 md:p-6 space-y-4">
+          <h2 className="text-base md:text-lg font-semibold text-text-dark mb-2 md:mb-4">Step 2: Course Selection</h2>
           <Select
             label="Class"
             value={form.class}
@@ -295,13 +355,13 @@ export default function AdmissionPage() {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="flex-1 border border-gray-300 text-text-dark font-semibold py-3 rounded-md hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+              className="flex-1 border border-gray-300 text-text-dark font-semibold py-3.5 rounded-md hover:bg-gray-50 transition-all flex items-center justify-center gap-2 active:scale-[0.98] select-none"
             >
               <ChevronLeft size={18} /> Back
             </button>
             <button
               type="submit"
-              className="flex-1 bg-primary text-white font-semibold py-3 rounded-md hover:brightness-110 transition-all flex items-center justify-center gap-2"
+              className="flex-1 bg-primary text-white font-semibold py-3.5 rounded-md hover:brightness-110 transition-all flex items-center justify-center gap-2 active:scale-[0.98] select-none"
             >
               Next <ChevronRight size={18} />
             </button>
@@ -310,9 +370,9 @@ export default function AdmissionPage() {
       )}
 
       {step === 3 && (
-        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="bg-white rounded-xl shadow-md p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-text-dark mb-4">Step 3: Confirm & Submit</h2>
-          <div className="space-y-3 text-sm bg-gray-50 rounded-lg p-4">
+        <form onSubmit={handleSubmit} noValidate className="bg-white rounded-xl shadow-md p-4 md:p-6 space-y-4">
+          <h2 className="text-base md:text-lg font-semibold text-text-dark mb-2 md:mb-4">Step 3: Confirm & Submit</h2>
+          <div className="space-y-3 text-sm bg-gray-50 rounded-lg p-3 md:p-4">
             <Row label="Student Name" value={form.student_name} />
             <Row label="Father's Name" value={form.father_name} />
             <Row label="Phone" value={form.phone} />
@@ -325,7 +385,7 @@ export default function AdmissionPage() {
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="flex-1 border border-gray-300 text-text-dark font-semibold py-3 rounded-md hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+              className="flex-1 border border-gray-300 text-text-dark font-semibold py-3.5 rounded-md hover:bg-gray-50 transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-60 select-none"
               disabled={submitting}
             >
               <ChevronLeft size={18} /> Back
@@ -333,7 +393,7 @@ export default function AdmissionPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 bg-secondary text-white font-semibold py-3 rounded-md hover:brightness-110 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+              className="flex-1 bg-secondary text-white font-semibold py-3.5 rounded-md hover:brightness-110 transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-60 select-none"
             >
               {submitting ? <Loader2 size={18} className="animate-spin" /> : null}
               {submitting ? 'Submitting...' : 'Submit'}
@@ -367,7 +427,7 @@ function Input({ label, value, onChange, error, type = 'text' }: { label: string
         data-error={error ? 'true' : undefined}
         className={`w-full border ${
           error ? 'border-red-500' : 'border-gray-300'
-        } rounded-md px-3 py-2 text-text-dark focus:outline-none focus:ring-2 focus:ring-primary/50`}
+        } rounded-md px-3 py-3 md:py-2 text-base md:text-sm text-text-dark focus:outline-none focus:ring-2 focus:ring-primary/50`}
       />
       {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
@@ -381,12 +441,13 @@ function Select({ label, value, onChange, options, error }: { label: string, val
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        data-error={error ? 'true' : undefined}
         className={`w-full border ${
           error ? 'border-red-500' : 'border-gray-300'
-        } rounded-md px-3 py-2 text-text-dark bg-white focus:outline-none focus:ring-2 focus:ring-primary/50`}
+        } rounded-md px-3 py-3 md:py-2 text-base md:text-sm text-text-dark bg-white focus:outline-none focus:ring-2 focus:ring-primary/50`}
       >
         <option value="">Select {label}</option>
-        {options.map((o: any) => (
+        {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}
           </option>

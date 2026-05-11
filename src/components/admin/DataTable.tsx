@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import type { ReactNode } from 'react'
 import { Search } from 'lucide-react'
 
 interface Column {
@@ -8,14 +9,18 @@ interface Column {
   label: string
 }
 
-interface DataTableProps<T extends Record<string, any>> {
+interface DataTableProps<T extends object> {
   columns: Column[]
   data: T[]
   searchKeys?: (keyof T & string)[]
-  actions?: (row: T) => React.ReactNode
+  actions?: (row: T) => ReactNode
 }
 
-export default function DataTable<T extends Record<string, any>>({
+function getRowValue<T extends object>(row: T, key: string) {
+  return row[key as keyof T]
+}
+
+export default function DataTable<T extends object>({
   columns,
   data,
   searchKeys,
@@ -28,7 +33,7 @@ export default function DataTable<T extends Record<string, any>>({
     const q = search.toLowerCase()
     return data.filter((row) =>
       searchKeys.some((key) =>
-        String(row[key] ?? '').toLowerCase().includes(q)
+        String(getRowValue(row, key) ?? '').toLowerCase().includes(q)
       )
     )
   }, [search, data, searchKeys])
@@ -82,7 +87,7 @@ export default function DataTable<T extends Record<string, any>>({
                 <tr key={i} className="hover:bg-gray-50">
                   {columns.map((col) => (
                     <td key={col.key} className="whitespace-nowrap px-4 py-3">
-                      {row[col.key] ?? '-'}
+                      {String(getRowValue(row, col.key) ?? '-')}
                     </td>
                   ))}
                   {actions && (

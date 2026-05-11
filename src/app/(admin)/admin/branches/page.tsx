@@ -50,8 +50,7 @@ export default function BranchesPage() {
     showToast('success', 'Branch updated.')
   }
 
-  const handleAdd = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleAdd = () => {
     if (!form.name.trim() || !form.address.trim() || !form.city.trim() || !form.phone.trim()) {
       showToast('error', 'Name, address, city, and phone are required.')
       return
@@ -75,7 +74,7 @@ export default function BranchesPage() {
     setShowAddForm(true)
   }
 
-  const formFields = (prefix: string) => (
+  const formFields = () => (
     <div className="space-y-3">
       <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#1A3C8F] focus:ring-1 focus:ring-[#1A3C8F]" placeholder="Branch name *" />
@@ -107,11 +106,11 @@ export default function BranchesPage() {
       </div>
 
       {showAddForm && (
-        <form onSubmit={handleAdd} className="mb-8 rounded-xl border bg-white p-6 shadow-sm">
+        <div className="mb-8 rounded-xl border bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-semibold text-gray-800">New Branch</h2>
-          {formFields('add')}
+          {formFields()}
           <div className="mt-4 flex gap-2">
-            <button type="submit" className="rounded-lg bg-[#1A3C8F] px-4 py-2 text-sm font-medium text-white hover:bg-[#15307a] transition-colors">
+            <button type="button" onClick={handleAdd} className="rounded-lg bg-[#1A3C8F] px-4 py-2 text-sm font-medium text-white hover:bg-[#15307a] transition-colors">
               Save Branch
             </button>
             <button type="button" onClick={() => setShowAddForm(false)}
@@ -119,7 +118,7 @@ export default function BranchesPage() {
               Cancel
             </button>
           </div>
-        </form>
+        </div>
       )}
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -129,7 +128,7 @@ export default function BranchesPage() {
             <div key={b.id} className="rounded-xl border bg-white p-6 shadow-sm">
               {editing ? (
                 <>
-                  {formFields('edit')}
+                  {formFields()}
                   <div className="mt-4 flex gap-2">
                     <button onClick={saveEdit}
                       className="flex items-center gap-1 rounded-lg bg-[#1A3C8F] px-3 py-2 text-xs font-medium text-white hover:bg-[#15307a]">

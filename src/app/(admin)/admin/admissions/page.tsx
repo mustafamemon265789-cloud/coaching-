@@ -6,6 +6,10 @@ import { useToast } from '@/components/admin/ToastProvider'
 import { getAdmissions, updateAdmission, type LocalAdmission } from '@/lib/db'
 
 type Status = LocalAdmission['status']
+type AdminAdmission = LocalAdmission & {
+  branch_name: string
+  course_name: string
+}
 
 const columns = [
   { key: 'id', label: 'ID' },
@@ -25,26 +29,40 @@ const statusColors: Record<string, string> = {
   rejected: 'text-red-600 bg-red-50',
 }
 
+const mapAdmission = (admission: LocalAdmission): AdminAdmission => ({
+  ...admission,
+  branch_name: admission.branch?.name || '-',
+  course_name: admission.course?.title || '-',
+})
+
 export default function AdmissionsPage() {
-  const [admissions, setAdmissions] = useState<any[]>([])
+  const [admissions, setAdmissions] = useState<AdminAdmission[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [filter, setFilter] = useState<Status | 'All'>('All')
   const { showToast } = useToast()
 
-  const loadData = async () => {
-    setIsLoading(true)
+  const loadData = async (showLoading = true) => {
+    if (showLoading) setIsLoading(true)
     const rawData = await getAdmissions()
-    const mapped = rawData.map(a => ({
-      ...a,
-      branch_name: a.branch?.name || '-',
-      course_name: a.course?.title || '-',
-    }))
-    setAdmissions(mapped)
+    setAdmissions(rawData.map(mapAdmission))
     setIsLoading(false)
   }
 
   useEffect(() => {
-    loadData()
+    let isMounted = true
+
+    void getAdmissions()
+      .then((rawData) => {
+        if (!isMounted) return
+        setAdmissions(rawData.map(mapAdmission))
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   const filtered = filter === 'All' ? admissions : admissions.filter((a) => a.status === filter)
@@ -52,7 +70,7 @@ export default function AdmissionsPage() {
   const handleStatus = async (id: string, status: Status) => {
     try {
       await updateAdmission(id, { status })
-      await loadData()
+      await loadData(false)
       showToast('success', `Admission status updated to ${status}.`)
     } catch {
       showToast('error', 'Failed to update admission.')

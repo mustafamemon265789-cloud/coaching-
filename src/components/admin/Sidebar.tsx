@@ -44,14 +44,14 @@ export default function Sidebar() {
     <>
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed left-4 top-4 z-50 rounded-md border bg-white p-2 shadow-sm lg:hidden"
+        className="fixed right-4 top-3 z-40 rounded-md border bg-white p-2 shadow-sm lg:hidden"
         aria-label="Open sidebar"
       >
         <Menu className="h-5 w-5" />
       </button>
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r bg-white transition-transform duration-200 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r bg-white shadow-2xl transition-transform duration-300 lg:static lg:w-64 lg:translate-x-0 lg:shadow-none ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

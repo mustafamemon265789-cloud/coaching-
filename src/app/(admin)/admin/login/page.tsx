@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { login } from '@/lib/auth'
 import { Loader2, Lock } from 'lucide-react'
@@ -12,24 +12,23 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const errorRef = useRef<HTMLParagraphElement>(null)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
+    setLoading(true)
 
     const passwordValue = password.trim()
 
     if (!passwordValue) {
       setError('Please enter the admin password.')
       setTimeout(() => errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
+      setLoading(false)
       return
     }
 
-    if (password === '123456') {
-      const now = new Date()
-      now.setHours(now.getHours() + 12)
-      document.cookie = `auth_token=true; expires=${now.toUTCString()}; path=/;`
-      
+    if (login(passwordValue)) {
       router.replace('/admin/dashboard')
+      router.refresh()
     } else {
       setError('Invalid password, or this browser blocked sign-in storage.')
       setTimeout(() => errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
@@ -39,8 +38,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#1A3C8F] to-[#2D5BD6] px-4 overflow-y-auto">
-      <form
-        onSubmit={handleSubmit}
+      <div
         className="w-full max-w-sm rounded-xl bg-white p-8 shadow-2xl my-auto"
       >
         <div className="mb-6 text-center">
@@ -56,7 +54,7 @@ export default function LoginPage() {
           </p>
         )}
 
-        <div>
+        <form onSubmit={handleSubmit}>
           <label className="mb-1 block text-sm font-medium text-gray-700">Password</label>
           <input
             type="password"
@@ -69,7 +67,7 @@ export default function LoginPage() {
             inputMode="numeric"
             autoFocus
           />
-        </div>
+        
 
         <button
           type="submit"
@@ -79,7 +77,8 @@ export default function LoginPage() {
           {loading && <Loader2 size={16} className="animate-spin" />}
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
-      </form>
+        </form>
+      </div>
     </div>
   )
 }

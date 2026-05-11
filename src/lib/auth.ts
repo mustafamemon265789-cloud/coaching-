@@ -14,7 +14,8 @@ function setCookie(key: string, value: string): boolean {
 function getCookie(key: string): string | null {
   try {
     const match = document.cookie
-      .split('; ')
+      .split(';')
+      .map((row) => row.trim())
       .find((row) => row.startsWith(`${key}=`))
     return match ? decodeURIComponent(match.slice(key.length + 1)) : null
   } catch {
@@ -61,10 +62,10 @@ function removeItem(key: string): void {
   try {
     localStorage.removeItem(key)
   } catch {
-    try {
-      sessionStorage.removeItem(key)
-    } catch {
-    }
+  }
+  try {
+    sessionStorage.removeItem(key)
+  } catch {
   }
   removeCookie(key)
   memoryStore.delete(key)

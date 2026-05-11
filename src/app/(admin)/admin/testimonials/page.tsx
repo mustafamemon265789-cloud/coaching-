@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useToast } from '@/components/admin/ToastProvider'
 import ConfirmDialog from '@/components/admin/ConfirmDialog'
-import { Quote, Edit2, Save, X, Trash2, Eye, EyeOff, Star } from 'lucide-react'
+import { Quote, Edit2, Trash2, Eye, EyeOff, Star } from 'lucide-react'
 
 interface Testimonial {
   id: number

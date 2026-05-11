@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Award, GraduationCap, Target, Eye } from 'lucide-react'
+import { GraduationCap, Target, Eye } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'About Us | Sir Azan Coaching Center',
