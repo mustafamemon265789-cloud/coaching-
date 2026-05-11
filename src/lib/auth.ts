@@ -72,7 +72,7 @@ function removeItem(key: string): void {
 }
 
 function getStoredPassword(): string {
-  return getItem(PASSWORD_KEY) || '123456'
+  return getItem(PASSWORD_KEY) || '1111'
 }
 
 export function login(password: string): boolean {
