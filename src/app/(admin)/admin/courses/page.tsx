@@ -1,25 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import DataTable from '@/components/admin/DataTable'
 import ConfirmDialog from '@/components/admin/ConfirmDialog'
 import { useToast } from '@/components/admin/ToastProvider'
+import { getAdminCourses, addAdminCourse, updateAdminCourse, deleteAdminCourse, type AdminCourse } from '@/lib/db'
 
-interface Course {
-  id: number
-  title: string
-  description: string
-  class_level: string
-  subjects: string
-  duration: string
-  fee_monthly: number
-  fee_admission: number
-  schedule: string
-  branch: string
-  active: boolean
-}
-
-const branches = ['Main Campus', 'City Branch', 'Town Branch']
 const classLevels = ['Class 9', 'Class 10', 'Class 11', 'Class 12', 'Intermediate']
 
 const columns = [
@@ -32,12 +18,9 @@ const columns = [
 ]
 
 export default function CoursesPage() {
-  const [courses, setCourses] = useState<Course[]>([
-    { id: 1, title: 'Mathematics', description: 'Complete Math preparation for board exams', class_level: 'Class 10', subjects: 'Algebra, Geometry, Trigonometry', duration: '6 months', fee_monthly: 2500, fee_admission: 1000, schedule: 'Mon/Wed/Fri 4-6 PM', branch: 'Main Campus', active: true },
-    { id: 2, title: 'Physics', description: 'Conceptual Physics with lab work', class_level: 'Class 11', subjects: 'Mechanics, Waves, Thermodynamics', duration: '1 year', fee_monthly: 3000, fee_admission: 1500, schedule: 'Tue/Thu/Sat 4-6 PM', branch: 'Main Campus', active: true },
-    { id: 3, title: 'English', description: 'English grammar and literature', class_level: 'Class 10', subjects: 'Grammar, Composition, Literature', duration: '6 months', fee_monthly: 2000, fee_admission: 800, schedule: 'Mon/Wed/Fri 2-4 PM', branch: 'City Branch', active: true },
-    { id: 4, title: 'Chemistry', description: 'Complete Chemistry preparation', class_level: 'Class 12', subjects: 'Organic, Inorganic, Physical', duration: '1 year', fee_monthly: 2800, fee_admission: 1200, schedule: 'Tue/Thu/Sat 2-4 PM', branch: 'Town Branch', active: false },
-  ])
+  const [courses, setCourses] = useState<AdminCourse[]>([])
+  const [branches, setBranches] = useState<string[]>(['Main Campus', 'City Branch', 'Town Branch'])
+  const [isLoading, setIsLoading] = useState(true)
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -47,19 +30,30 @@ export default function CoursesPage() {
   const [fee_monthly, setFeeMonthly] = useState('')
   const [fee_admission, setFeeAdmission] = useState('')
   const [schedule, setSchedule] = useState('')
-  const [branch, setBranch] = useState('Main Campus')
+  const [branch, setBranch] = useState('')
   const [editingId, setEditingId] = useState<number | null>(null)
   const [deleteId, setDeleteId] = useState<number | null>(null)
 
   const { showToast } = useToast()
 
+  const loadData = async () => {
+    setIsLoading(true)
+    const data = await getAdminCourses()
+    setCourses(data)
+    const branchNames = [...new Set(data.map((c) => c.branch).filter(Boolean))] as string[]
+    if (branchNames.length > 0) setBranches(branchNames)
+    setIsLoading(false)
+  }
+
+  useEffect(() => { loadData() }, [])
+
   const resetForm = () => {
     setTitle(''); setDescription(''); setClassLevel(''); setSubjects('')
     setDuration(''); setFeeMonthly(''); setFeeAdmission(''); setSchedule('')
-    setBranch('Main Campus'); setEditingId(null)
+    setBranch(''); setEditingId(null)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim() || !description.trim() || !class_level || !duration.trim() || !fee_monthly) {
       showToast('error', 'Please fill in required fields.')
@@ -67,25 +61,22 @@ export default function CoursesPage() {
     }
 
     if (editingId !== null) {
-      setCourses((prev) =>
-        prev.map((c) =>
-          c.id === editingId
-            ? { ...c, title, description, class_level, subjects, duration, fee_monthly: Number(fee_monthly), fee_admission: Number(fee_admission) || 0, schedule, branch }
-            : c
-        )
-      )
+      const course = courses.find((c) => c.id === editingId)
+      if (!course) return
+      await updateAdminCourse(course.supabaseId, { title, description, class_level, subjects, duration, fee_monthly: Number(fee_monthly), fee_admission: Number(fee_admission) || 0, schedule, branch, active: course.active })
+      await loadData()
       showToast('success', 'Course updated.')
       resetForm()
       return
     }
 
-    const id = Math.max(0, ...courses.map((c) => c.id)) + 1
-    setCourses((prev) => [...prev, { id, title, description, class_level, subjects, duration, fee_monthly: Number(fee_monthly), fee_admission: Number(fee_admission) || 0, schedule, branch, active: true }])
+    await addAdminCourse({ title, description, class_level, subjects, duration, fee_monthly: Number(fee_monthly), fee_admission: Number(fee_admission) || 0, schedule, branch })
+    await loadData()
     resetForm()
     showToast('success', 'Course added.')
   }
 
-  const startEdit = (course: Course) => {
+  const startEdit = (course: AdminCourse) => {
     setEditingId(course.id)
     setTitle(course.title); setDescription(course.description); setClassLevel(course.class_level)
     setSubjects(course.subjects); setDuration(course.duration)
@@ -93,17 +84,25 @@ export default function CoursesPage() {
     setSchedule(course.schedule); setBranch(course.branch)
   }
 
-  const toggleActive = (id: number) => {
-    setCourses((prev) => prev.map((c) => (c.id === id ? { ...c, active: !c.active } : c)))
+  const toggleActive = async (id: number) => {
+    const course = courses.find((c) => c.id === id)
+    if (!course) return
+    await updateAdminCourse(course.supabaseId, { ...course, active: !course.active })
+    await loadData()
     showToast('info', 'Course status toggled.')
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deleteId === null) return
-    setCourses((prev) => prev.filter((c) => c.id !== deleteId))
+    const course = courses.find((c) => c.id === deleteId)
+    if (!course) return
+    await deleteAdminCourse(course.supabaseId)
+    await loadData()
     setDeleteId(null)
     showToast('success', 'Course deleted.')
   }
+
+  if (isLoading) return <div className="p-12 text-center text-gray-500">Loading courses...</div>
 
   return (
     <div>
@@ -135,6 +134,7 @@ export default function CoursesPage() {
             className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
           <select value={branch} onChange={(e) => setBranch(e.target.value)}
             className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+            <option value="">Select Branch</option>
             {branches.map((b) => <option key={b} value={b}>{b}</option>)}
           </select>
         </div>
@@ -154,7 +154,7 @@ export default function CoursesPage() {
         columns={columns}
         data={courses}
         searchKeys={['title', 'class_level', 'subjects', 'branch']}
-        actions={(row) => (
+        actions={(row: AdminCourse) => (
           <div className="flex gap-2">
             <button onClick={() => startEdit(row)}
               className="rounded bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200">

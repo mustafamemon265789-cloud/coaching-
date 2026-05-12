@@ -1,25 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useToast } from '@/components/admin/ToastProvider'
+import { getStats, upsertStat, type StatItem } from '@/lib/db'
 import { Save } from 'lucide-react'
 
-interface StatItem {
-  key: string
-  label: string
-  value: number
-}
-
-const initialStats: StatItem[] = [
-  { key: 'admissions_today', label: 'Admissions Today', value: 24 },
-  { key: 'pending', label: 'Pending', value: 8 },
-  { key: 'approved', label: 'Approved', value: 14 },
-  { key: 'rejected', label: 'Rejected', value: 2 },
-]
-
 export default function StatsPage() {
-  const [stats, setStats] = useState(initialStats)
+  const [stats, setStats] = useState<StatItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const { showToast } = useToast()
+
+  const loadData = async () => {
+    setIsLoading(true)
+    const data = await getStats()
+    setStats(data)
+    setIsLoading(false)
+  }
+
+  useEffect(() => { loadData() }, [])
 
   const update = (key: string, field: 'label' | 'value', val: string | number) => {
     setStats((prev) =>
@@ -27,9 +25,14 @@ export default function StatsPage() {
     )
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    for (const s of stats) {
+      await upsertStat(s.key, s.label, s.value)
+    }
     showToast('success', 'Stats updated.')
   }
+
+  if (isLoading) return <div className="p-12 text-center text-gray-500">Loading stats...</div>
 
   return (
     <div>

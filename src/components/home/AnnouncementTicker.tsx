@@ -1,14 +1,12 @@
 import { Megaphone } from "lucide-react";
+import { getHomeAnnouncements } from "@/lib/db";
 
-const announcements = [
-  "📢 New session starting soon! Enroll now for 2026-27",
-  "🎯 98% success rate in board exams this year",
-  "🏆 Congratulations to our toppers!",
-  "📚 Free trial classes available for new students",
-  "⭐ Special discount on early admissions",
-];
+export default async function AnnouncementTicker() {
+  const announcements = await getHomeAnnouncements();
+  const items = announcements.length > 0
+    ? announcements
+    : ["New session starting soon! Enroll now for 2026-27", "98% success rate in board exams this year"];
 
-export default function AnnouncementTicker() {
   return (
     <div className="flex items-center gap-4 overflow-hidden bg-amber-50 py-3">
       <div className="flex shrink-0 items-center gap-3 pl-6">
@@ -19,7 +17,7 @@ export default function AnnouncementTicker() {
       </div>
       <div className="relative flex-1 overflow-hidden">
         <div className="animate-marquee flex w-max gap-12 whitespace-nowrap">
-          {[...announcements, ...announcements].map((text, i) => (
+          {[...items, ...items].map((text, i) => (
             <span key={i} className="text-sm font-medium text-text-dark">
               {text}
             </span>

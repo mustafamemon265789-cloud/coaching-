@@ -1,32 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { MapPin, Phone, Send, MessageCircle } from 'lucide-react'
-
-const branches = [
-  {
-    name: 'Main Branch Gulshan',
-    address: '123 Education Road, Block A, Gulshan-e-Iqbal, Karachi',
-    phone: '+92 300 1234567',
-    waNumber: '923001234567',
-  },
-  {
-    name: 'North Nazimabad Branch',
-    address: '456 Learning Avenue, Block B, North Nazimabad, Karachi',
-    phone: '+92 300 7654321',
-    waNumber: '923007654321',
-  },
-  {
-    name: 'Clifton Branch',
-    address: '789 Knowledge Street, Block 5, Clifton, Karachi',
-    phone: '+92 300 9876543',
-    waNumber: '923009876543',
-  },
-]
+import { getBranches, type Branch } from '@/lib/db'
 
 export default function ContactPage() {
+  const [branches, setBranches] = useState<Branch[]>([])
   const [form, setForm] = useState({ name: '', phone: '', message: '' })
   const [sent, setSent] = useState(false)
+
+  useEffect(() => {
+    getBranches().then(setBranches)
+  }, [])
 
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -104,11 +89,11 @@ export default function ContactPage() {
         <div className="space-y-6">
           <h2 className="text-xl font-semibold text-text-dark">Our Branches</h2>
           {branches.map((b) => (
-            <div key={b.name} className="bg-white rounded-xl shadow-md p-5">
+            <div key={b.id} className="bg-white rounded-xl shadow-md p-5">
               <h3 className="font-semibold text-primary mb-2">{b.name}</h3>
               <div className="flex items-start gap-2 text-sm text-text-muted mb-2">
                 <MapPin size={16} className="mt-0.5 shrink-0 text-secondary" />
-                <span>{b.address}</span>
+                <span>{b.address}, {b.city}</span>
               </div>
               <div className="flex items-center gap-2 text-sm mb-3">
                 <Phone size={16} className="shrink-0 text-secondary" />
@@ -120,7 +105,7 @@ export default function ContactPage() {
                 </a>
               </div>
               <a
-                href={`https://wa.me/${b.waNumber}`}
+                href={`https://wa.me/${b.phone.replace(/[^0-9]/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm text-green-600 hover:text-green-700 font-medium"

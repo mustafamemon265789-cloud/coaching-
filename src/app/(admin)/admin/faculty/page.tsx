@@ -1,30 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useToast } from '@/components/admin/ToastProvider'
 import ConfirmDialog from '@/components/admin/ConfirmDialog'
+import { getFaculty, addFaculty, updateFaculty, deleteFaculty, type FacultyMember } from '@/lib/db'
 import { GraduationCap, BookOpen, Edit2, Save, X, Trash2, Eye, EyeOff } from 'lucide-react'
 
-interface Faculty {
-  id: number
-  name: string
-  qualification: string
-  subject: string
-  bio: string
-  image_url: string
-  active: boolean
-}
-
-const seed: Faculty[] = [
-  { id: 1, name: 'Dr. Amina Yusuf', qualification: 'PhD in Islamic Studies', subject: 'Quran & Tafsir', bio: 'Over 15 years of experience teaching Quranic sciences and Arabic linguistics.', image_url: '', active: true },
-  { id: 2, name: 'Ustadh Bilal Hassan', qualification: 'Masters in Arabic Literature', subject: 'Arabic Language', bio: 'Specializes in modern and classical Arabic with a focus on conversational fluency.', image_url: '', active: true },
-  { id: 3, name: 'Sr. Fatima Noor', qualification: 'BA in Islamic Jurisprudence', subject: 'Fiqh & Hadith', bio: 'Dedicated to making Islamic jurisprudence accessible to students of all levels.', image_url: '', active: false },
-]
-
 export default function FacultyPage() {
-  const [faculty, setFaculty] = useState(seed)
+  const [faculty, setFaculty] = useState<FacultyMember[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [editingId, setEditingId] = useState<number | null>(null)
-  const [editForm, setEditForm] = useState<Faculty | null>(null)
+  const [editForm, setEditForm] = useState<FacultyMember | null>(null)
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [name, setName] = useState('')
   const [qualification, setQualification] = useState('')
@@ -33,14 +19,23 @@ export default function FacultyPage() {
   const [imageUrl, setImageUrl] = useState('')
   const { showToast } = useToast()
 
-  const handleAdd = (e: React.FormEvent) => {
+  const loadData = async () => {
+    setIsLoading(true)
+    const data = await getFaculty()
+    setFaculty(data)
+    setIsLoading(false)
+  }
+
+  useEffect(() => { loadData() }, [])
+
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim() || !qualification.trim() || !subject.trim() || !bio.trim()) {
       showToast('error', 'Please fill in name, qualification, subject, and bio.')
       return
     }
-    const id = Math.max(0, ...faculty.map((f) => f.id)) + 1
-    setFaculty((prev) => [...prev, { id, name, qualification, subject, bio, image_url: imageUrl, active: true }])
+    await addFaculty({ name, qualification, subject, bio, image_url: imageUrl })
+    await loadData()
     setName('')
     setQualification('')
     setSubject('')
@@ -49,7 +44,7 @@ export default function FacultyPage() {
     showToast('success', 'Faculty member added.')
   }
 
-  const startEdit = (f: Faculty) => {
+  const startEdit = (f: FacultyMember) => {
     setEditingId(f.id)
     setEditForm({ ...f })
   }
@@ -59,31 +54,38 @@ export default function FacultyPage() {
     setEditForm(null)
   }
 
-  const saveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editForm) return
     if (!editForm.name.trim() || !editForm.qualification.trim() || !editForm.subject.trim() || !editForm.bio.trim()) {
       showToast('error', 'Name, qualification, subject, and bio are required.')
       return
     }
-    setFaculty((prev) => prev.map((f) => (f.id === editForm.id ? editForm : f)))
+    await updateFaculty(editForm.supabaseId, { name: editForm.name, qualification: editForm.qualification, subject: editForm.subject, bio: editForm.bio, image_url: editForm.image_url, active: editForm.active })
+    await loadData()
     setEditingId(null)
     setEditForm(null)
     showToast('success', 'Faculty member updated.')
   }
 
-  const toggleActive = (id: number) => {
-    setFaculty((prev) =>
-      prev.map((f) => (f.id === id ? { ...f, active: !f.active } : f))
-    )
+  const toggleActive = async (id: number) => {
+    const f = faculty.find((m) => m.id === id)
+    if (!f) return
+    await updateFaculty(f.supabaseId, { name: f.name, qualification: f.qualification, subject: f.subject, bio: f.bio, image_url: f.image_url, active: !f.active })
+    await loadData()
     showToast('info', 'Faculty status toggled.')
   }
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteId === null) return
-    setFaculty((prev) => prev.filter((f) => f.id !== deleteId))
+    const f = faculty.find((m) => m.id === deleteId)
+    if (!f) return
+    await deleteFaculty(f.supabaseId)
+    await loadData()
     setDeleteId(null)
     showToast('success', 'Faculty member deleted.')
   }
+
+  if (isLoading) return <div className="p-12 text-center text-gray-500">Loading faculty...</div>
 
   return (
     <div>
@@ -184,7 +186,7 @@ export default function FacultyPage() {
                   />
                   <div className="flex gap-2">
                     <button
-                      onClick={saveEdit}
+                      onClick={handleSaveEdit}
                       className="flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-white hover:bg-primary/90"
                     >
                       <Save className="h-3.5 w-3.5" /> Save

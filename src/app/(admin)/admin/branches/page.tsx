@@ -1,76 +1,77 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useToast } from '@/components/admin/ToastProvider'
 import ConfirmDialog from '@/components/admin/ConfirmDialog'
+import { getAdminBranches, addAdminBranch, updateAdminBranch, deleteAdminBranch, type AdminBranch } from '@/lib/db'
 import { MapPin, Phone, Mail, Edit2, Save, X, Plus, Trash2, Globe } from 'lucide-react'
 
-interface Branch {
-  id: number
-  name: string
-  address: string
-  city: string
-  phone: string
-  email: string
-  map_link: string
-}
-
-const initialBranches: Branch[] = [
-  { id: 1, name: 'Main Campus', address: '123 Main Street', city: 'Lahore', phone: '042-1111111', email: 'main@azancoaching.com', map_link: 'https://maps.google.com/?q=Lahore' },
-  { id: 2, name: 'City Branch', address: '456 City Road', city: 'Lahore', phone: '042-2222222', email: 'city@azancoaching.com', map_link: 'https://maps.google.com/?q=Lahore' },
-  { id: 3, name: 'Town Branch', address: '789 Town Avenue', city: 'Lahore', phone: '042-3333333', email: 'town@azancoaching.com', map_link: 'https://maps.google.com/?q=Lahore' },
-]
-
 export default function BranchesPage() {
-  const [branches, setBranches] = useState(initialBranches)
+  const [branches, setBranches] = useState<AdminBranch[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [deleteId, setDeleteId] = useState<number | null>(null)
-  const [form, setForm] = useState<Branch>({ id: 0, name: '', address: '', city: '', phone: '', email: '', map_link: '' })
+  const [form, setForm] = useState({ name: '', address: '', city: '', phone: '', email: '', map_link: '' })
   const { showToast } = useToast()
 
-  const startEdit = (b: Branch) => {
+  const loadData = async () => {
+    setIsLoading(true)
+    const data = await getAdminBranches()
+    setBranches(data)
+    setIsLoading(false)
+  }
+
+  useEffect(() => { loadData() }, [])
+
+  const startEdit = (b: AdminBranch) => {
     setEditingId(b.id)
-    setForm({ ...b })
+    setForm({ name: b.name, address: b.address, city: b.city, phone: b.phone, email: b.email, map_link: b.map_link })
   }
 
   const cancelEdit = () => {
     setEditingId(null)
-    setForm({ id: 0, name: '', address: '', city: '', phone: '', email: '', map_link: '' })
+    setForm({ name: '', address: '', city: '', phone: '', email: '', map_link: '' })
   }
 
-  const saveEdit = () => {
-    if (!form) return
+  const saveEdit = async () => {
     if (!form.name.trim() || !form.address.trim() || !form.city.trim() || !form.phone.trim()) {
       showToast('error', 'Name, address, city, and phone are required.')
       return
     }
-    setBranches((prev) => prev.map((b) => (b.id === form.id ? form : b)))
+    const branch = branches.find((b) => b.id === editingId)
+    if (!branch) return
+    await updateAdminBranch(branch.supabaseId, form)
+    await loadData()
     setEditingId(null)
+    setForm({ name: '', address: '', city: '', phone: '', email: '', map_link: '' })
     showToast('success', 'Branch updated.')
   }
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!form.name.trim() || !form.address.trim() || !form.city.trim() || !form.phone.trim()) {
       showToast('error', 'Name, address, city, and phone are required.')
       return
     }
-    const id = Math.max(0, ...branches.map((b) => b.id)) + 1
-    setBranches((prev) => [...prev, { ...form, id }])
+    await addAdminBranch(form)
+    await loadData()
     setShowAddForm(false)
-    setForm({ id: 0, name: '', address: '', city: '', phone: '', email: '', map_link: '' })
+    setForm({ name: '', address: '', city: '', phone: '', email: '', map_link: '' })
     showToast('success', 'Branch added.')
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deleteId === null) return
-    setBranches((prev) => prev.filter((b) => b.id !== deleteId))
+    const branch = branches.find((b) => b.id === deleteId)
+    if (!branch) return
+    await deleteAdminBranch(branch.supabaseId)
+    await loadData()
     setDeleteId(null)
     showToast('success', 'Branch deleted.')
   }
 
   const openAddForm = () => {
-    setForm({ id: 0, name: '', address: '', city: '', phone: '', email: '', map_link: '' })
+    setForm({ name: '', address: '', city: '', phone: '', email: '', map_link: '' })
     setShowAddForm(true)
   }
 
@@ -94,6 +95,8 @@ export default function BranchesPage() {
         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Google Maps link" />
     </div>
   )
+
+  if (isLoading) return <div className="p-12 text-center text-gray-500">Loading branches...</div>
 
   return (
     <div>

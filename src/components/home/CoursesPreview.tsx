@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getCourses } from "@/lib/db";
 
 interface Course {
   title: string;
@@ -7,34 +8,24 @@ interface Course {
   subjects: string[];
 }
 
-const courses: Course[] = [
-  {
-    title: "Science Group (Pre-Medical)",
-    classLevel: "Class 9 - 12",
-    fee: "Rs. 3,500/month",
-    subjects: ["Biology", "Chemistry", "Physics", "English"],
-  },
-  {
-    title: "Science Group (Pre-Engineering)",
-    classLevel: "Class 9 - 12",
-    fee: "Rs. 3,500/month",
-    subjects: ["Mathematics", "Chemistry", "Physics", "English"],
-  },
-  {
-    title: "Arts / Humanities",
-    classLevel: "Class 9 - 12",
-    fee: "Rs. 2,500/month",
-    subjects: ["Economics", "Civics", "Urdu", "Islamiyat"],
-  },
-  {
-    title: "Commerce",
-    classLevel: "Class 11 - 12",
-    fee: "Rs. 3,000/month",
-    subjects: ["Accounting", "Business Math", "Principles of Commerce", "Economics"],
-  },
+const fallbackCourses: Course[] = [
+  { title: "Science Group (Pre-Medical)", classLevel: "Class 9 - 12", fee: "Rs. 3,500/month", subjects: ["Biology", "Chemistry", "Physics", "English"] },
+  { title: "Science Group (Pre-Engineering)", classLevel: "Class 9 - 12", fee: "Rs. 3,500/month", subjects: ["Mathematics", "Chemistry", "Physics", "English"] },
+  { title: "Arts / Humanities", classLevel: "Class 9 - 12", fee: "Rs. 2,500/month", subjects: ["Economics", "Civics", "Urdu", "Islamiyat"] },
+  { title: "Commerce", classLevel: "Class 11 - 12", fee: "Rs. 3,000/month", subjects: ["Accounting", "Business Math", "Principles of Commerce", "Economics"] },
 ];
 
-export default function CoursesPreview() {
+export default async function CoursesPreview() {
+  const dbCourses = await getCourses()
+  const courses: Course[] = dbCourses.length > 0
+    ? dbCourses.slice(0, 6).map((c) => ({
+        title: c.title,
+        classLevel: 'Class ' + c.class_level,
+        fee: c.fee_monthly ? 'Rs. ' + c.fee_monthly.toLocaleString() + '/month' : 'Contact for fee',
+        subjects: (c.subjects || '').split(',').map((s) => s.trim()).filter(Boolean),
+      }))
+    : fallbackCourses
+
   return (
     <section className="bg-background px-6 py-20 sm:px-12 lg:px-20">
       <div className="mx-auto max-w-7xl">

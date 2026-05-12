@@ -1,51 +1,42 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useToast } from '@/components/admin/ToastProvider'
+import { getSettings, saveSettings } from '@/lib/db'
 import { Save, Globe, Phone, Mail, MapPin, MessageCircle, Hash, Type, FileText } from 'lucide-react'
-
-type Settings = Record<string, string>
-
-const defaultSettings: Settings = {
-  instituteName: 'Sir Azan Coaching Center',
-  tagline: 'Excellence in Education, Rooted in Values',
-  heroHeadline: 'Unlock Your Academic Potential with Expert Guidance',
-  heroSubheadline: 'Personalized coaching for Matric, Intermediate, and Competitive Exams across Pakistan',
-  primaryPhone: '+92 333 1234567',
-  secondaryPhone: '+92 333 7654321',
-  email: 'info@azancoaching.edu.pk',
-  address: 'Main Boulevard, Block B, near Al-Faisal Market, Gulberg III, Lahore, Punjab',
-  whatsappNumber: '+92 333 1234567',
-  facebookUrl: 'https://facebook.com/azancoaching',
-  twitterUrl: 'https://twitter.com/azancoaching',
-  instagramUrl: 'https://instagram.com/azancoaching',
-  youtubeUrl: 'https://youtube.com/@azancoaching',
-  studentsEnrolled: '1200+',
-  successRate: '98%',
-  numberOfBranches: '3',
-  yearsOfExcellence: '10+',
-}
 
 const inputCls = 'rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none w-full'
 
 export default function SettingsPage() {
   const { showToast } = useToast()
-  const [settings, setSettings] = useState<Settings>({ ...defaultSettings })
+  const [settings, setSettings] = useState<Record<string, string> | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const update = (key: string, value: string) => {
-    setSettings(prev => ({ ...prev, [key]: value }))
+  const loadData = async () => {
+    setIsLoading(true)
+    const data = await getSettings()
+    setSettings(data)
+    setIsLoading(false)
   }
 
-  const handleSave = () => {
+  useEffect(() => { loadData() }, [])
+
+  const update = (key: string, value: string) => {
+    setSettings(prev => prev ? { ...prev, [key]: value } : prev)
+  }
+
+  const handleSave = async () => {
+    if (!settings) return
+    await saveSettings(settings)
     showToast('success', 'All settings saved successfully.')
   }
 
+  if (isLoading || !settings) return <div className="p-12 text-center text-gray-500">Loading settings...</div>
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
       <h1 className="text-2xl font-bold text-gray-900">Site Settings</h1>
 
-      {/* Section 1 — Brand & Identity */}
       <section className="rounded-xl border bg-white shadow-sm p-6 space-y-5">
         <div className="flex items-center gap-2 text-primary font-semibold text-lg">
           <Globe size={20} />
@@ -71,7 +62,6 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      {/* Section 2 — Contact Info */}
       <section className="rounded-xl border bg-white shadow-sm p-6 space-y-5">
         <div className="flex items-center gap-2 text-primary font-semibold text-lg">
           <Phone size={20} />
@@ -122,7 +112,6 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      {/* Section 3 — Home Page Stats */}
       <section className="rounded-xl border bg-white shadow-sm p-6 space-y-5">
         <div className="flex items-center gap-2 text-primary font-semibold text-lg">
           <FileText size={20} />
@@ -148,8 +137,6 @@ export default function SettingsPage() {
         </div>
       </section>
 
-
-      {/* Save Button */}
       <div className="flex justify-end">
         <button
           onClick={handleSave}

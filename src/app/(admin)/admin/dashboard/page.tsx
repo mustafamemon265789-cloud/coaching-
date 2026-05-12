@@ -2,13 +2,19 @@
 
 import { useEffect, useState } from 'react'
 import { Users, FileText, BookOpen, Building2, TrendingUp, Clock, CheckCircle, XCircle } from 'lucide-react'
-import { getAdmissions, type LocalAdmission } from '@/lib/db'
+import { getAdmissions, getCourses, getBranches, getFaculty, type LocalAdmission } from '@/lib/db'
 
 export default function DashboardPage() {
   const [admissions, setAdmissions] = useState<LocalAdmission[]>([])
+  const [courseCount, setCourseCount] = useState(0)
+  const [facultyCount, setFacultyCount] = useState(0)
+  const [branchCount, setBranchCount] = useState(0)
   
   useEffect(() => {
     getAdmissions().then(setAdmissions)
+    getCourses().then((c) => setCourseCount(c.length))
+    getFaculty().then((f) => setFacultyCount(f.filter((m) => m.active).length))
+    getBranches().then((b) => setBranchCount(b.length))
   }, [])
 
   const pending = admissions.filter((a) => a.status === 'pending').length
@@ -18,9 +24,9 @@ export default function DashboardPage() {
 
   const overviewCards = [
     { label: 'Total Admissions', value: total, icon: FileText, color: 'bg-blue-500', bg: 'bg-blue-50' },
-    { label: 'Active Courses', value: 12, icon: BookOpen, color: 'bg-green-500', bg: 'bg-green-50' },
-    { label: 'Faculty Members', value: 8, icon: Users, color: 'bg-purple-500', bg: 'bg-purple-50' },
-    { label: 'Branches', value: 3, icon: Building2, color: 'bg-orange-500', bg: 'bg-orange-50' },
+    { label: 'Active Courses', value: courseCount, icon: BookOpen, color: 'bg-green-500', bg: 'bg-green-50' },
+    { label: 'Faculty Members', value: facultyCount, icon: Users, color: 'bg-purple-500', bg: 'bg-purple-50' },
+    { label: 'Branches', value: branchCount, icon: Building2, color: 'bg-orange-500', bg: 'bg-orange-50' },
   ]
 
   const statusCards = [

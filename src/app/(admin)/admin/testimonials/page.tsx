@@ -1,28 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useToast } from '@/components/admin/ToastProvider'
 import ConfirmDialog from '@/components/admin/ConfirmDialog'
+import { getTestimonials, addTestimonial, updateTestimonial, deleteTestimonial, type Testimonial } from '@/lib/db'
 import { Quote, Edit2, Trash2, Eye, EyeOff, Star } from 'lucide-react'
 
-interface Testimonial {
-  id: number
-  student_name: string
-  achievement: string
-  class_level: string
-  quote: string
-  rating: number
-  visible: boolean
-}
-
-const seed: Testimonial[] = [
-  { id: 1, student_name: 'Ahmed Khan', achievement: 'Got 95% in Board Exams', class_level: 'Class 10', quote: 'Sir Azan Coaching Center changed my life. The teachers are incredibly supportive.', rating: 5, visible: true },
-  { id: 2, student_name: 'Fatima Ali', achievement: 'Scored 1080/1100', class_level: 'Intermediate', quote: 'The regular test system and personalized attention helped me achieve my dream score.', rating: 5, visible: true },
-  { id: 3, student_name: 'Usman Raza', achievement: 'Topper in City', class_level: 'Class 12', quote: 'The small batch sizes mean every student gets individual attention.', rating: 4, visible: true },
-]
-
 export default function TestimonialsPage() {
-  const [testimonials, setTestimonials] = useState(seed)
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [deleteId, setDeleteId] = useState<number | null>(null)
 
@@ -34,11 +20,20 @@ export default function TestimonialsPage() {
 
   const { showToast } = useToast()
 
+  const loadData = async () => {
+    setIsLoading(true)
+    const data = await getTestimonials()
+    setTestimonials(data)
+    setIsLoading(false)
+  }
+
+  useEffect(() => { loadData() }, [])
+
   const resetForm = () => {
     setName(''); setAchievement(''); setClassLevel(''); setQuote(''); setRating(5); setEditingId(null)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!student_name.trim() || !quote.trim()) {
       showToast('error', 'Student name and quote are required.')
@@ -46,16 +41,17 @@ export default function TestimonialsPage() {
     }
 
     if (editingId !== null) {
-      setTestimonials((prev) =>
-        prev.map((t) => t.id === editingId ? { ...t, student_name, achievement, class_level, quote, rating } : t)
-      )
+      const t = testimonials.find((item) => item.id === editingId)
+      if (!t) return
+      await updateTestimonial(t.supabaseId, { student_name, achievement, class_level, quote, rating, visible: t.visible })
+      await loadData()
       showToast('success', 'Testimonial updated.')
       resetForm()
       return
     }
 
-    const id = Math.max(0, ...testimonials.map((t) => t.id)) + 1
-    setTestimonials((prev) => [...prev, { id, student_name, achievement, class_level, quote, rating, visible: true }])
+    await addTestimonial({ student_name, achievement, class_level, quote, rating })
+    await loadData()
     resetForm()
     showToast('success', 'Testimonial added.')
   }
@@ -66,17 +62,25 @@ export default function TestimonialsPage() {
     setQuote(t.quote); setRating(t.rating)
   }
 
-  const toggleVisible = (id: number) => {
-    setTestimonials((prev) => prev.map((t) => t.id === id ? { ...t, visible: !t.visible } : t))
+  const toggleVisible = async (id: number) => {
+    const t = testimonials.find((item) => item.id === id)
+    if (!t) return
+    await updateTestimonial(t.supabaseId, { student_name: t.student_name, achievement: t.achievement, class_level: t.class_level, quote: t.quote, rating: t.rating, visible: !t.visible })
+    await loadData()
     showToast('info', 'Visibility toggled.')
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deleteId === null) return
-    setTestimonials((prev) => prev.filter((t) => t.id !== deleteId))
+    const t = testimonials.find((item) => item.id === deleteId)
+    if (!t) return
+    await deleteTestimonial(t.supabaseId)
+    await loadData()
     setDeleteId(null)
     showToast('success', 'Testimonial deleted.')
   }
+
+  if (isLoading) return <div className="p-12 text-center text-gray-500">Loading testimonials...</div>
 
   return (
     <div>

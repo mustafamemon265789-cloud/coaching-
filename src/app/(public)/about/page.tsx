@@ -1,27 +1,10 @@
 import type { Metadata } from 'next'
 import { GraduationCap, Target, Eye } from 'lucide-react'
+import { getFaculty } from '@/lib/db'
 
 export const metadata: Metadata = {
   title: 'About Us | Sir Azan Coaching Center',
 }
-
-const faculty = [
-  {
-    name: 'Sir Azan',
-    subject: 'Physics',
-    qualification: 'M.Sc. Physics, 15+ years experience',
-  },
-  {
-    name: 'Dr. Fatima Hassan',
-    subject: 'Chemistry',
-    qualification: 'Ph.D. Chemistry, 10+ years experience',
-  },
-  {
-    name: 'Mr. Usman Khan',
-    subject: 'Mathematics',
-    qualification: 'M.Sc. Mathematics, 12+ years experience',
-  },
-]
 
 const achievements = [
   { year: '2018', title: 'Institute Founded', desc: 'Sir Azan Coaching Center established with 20 students.' },
@@ -33,7 +16,14 @@ const achievements = [
   { year: '2024', title: 'Digital Learning Initiative', desc: 'Launched hybrid classes and online resources.' },
 ]
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const facultyMembers = await getFaculty()
+  const faculty = facultyMembers.filter((f) => f.active).slice(0, 3).map((f) => ({
+    name: f.name,
+    subject: f.subject,
+    qualification: f.qualification,
+  }))
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <section className="mb-16">

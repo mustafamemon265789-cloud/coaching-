@@ -1,48 +1,48 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useToast } from '@/components/admin/ToastProvider'
+import { getAnnouncements, addAnnouncement, toggleAnnouncement, type Announcement } from '@/lib/db'
 import { Calendar } from 'lucide-react'
 
-interface Announcement {
-  id: number
-  title: string
-  content: string
-  date: string
-  active: boolean
-}
-
-const seed: Announcement[] = [
-  { id: 1, title: 'Summer Enrollment Open', content: 'Registration for summer courses is now open.', date: '2026-05-01', active: true },
-  { id: 2, title: 'Holiday Notice', content: 'Center will be closed on May 15th.', date: '2026-04-28', active: true },
-]
-
 export default function AnnouncementsPage() {
-  const [announcements, setAnnouncements] = useState(seed)
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const { showToast } = useToast()
 
-  const handleAdd = (e: React.FormEvent) => {
+  const loadData = async () => {
+    setIsLoading(true)
+    const data = await getAnnouncements()
+    setAnnouncements(data)
+    setIsLoading(false)
+  }
+
+  useEffect(() => { loadData() }, [])
+
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim() || !content.trim()) {
       showToast('error', 'Please fill in all fields.')
       return
     }
-    const id = Math.max(0, ...announcements.map((a) => a.id)) + 1
-    const date = new Date().toISOString().split('T')[0]
-    setAnnouncements((prev) => [...prev, { id, title, content, date, active: true }])
+    await addAnnouncement({ title, content })
+    await loadData()
     setTitle('')
     setContent('')
     showToast('success', 'Announcement created.')
   }
 
-  const toggleActive = (id: number) => {
-    setAnnouncements((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, active: !a.active } : a))
-    )
+  const toggleActive = async (id: number) => {
+    const a = announcements.find((item) => item.id === id)
+    if (!a) return
+    await toggleAnnouncement(a.supabaseId)
+    await loadData()
     showToast('info', 'Announcement status toggled.')
   }
+
+  if (isLoading) return <div className="p-12 text-center text-gray-500">Loading announcements...</div>
 
   return (
     <div>
