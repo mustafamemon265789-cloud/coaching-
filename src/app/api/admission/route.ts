@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       student_name: student_name.trim(),
       father_name: father_name.trim(),
       phone: phone.replace(/\D/g, ''), // Keep only digits
-      email: email.trim() || null,
+      email: email?.trim() || null,
       class_applying: class_applying,
       branch_id: branch_id || null,
       course_id: course_id || null,
