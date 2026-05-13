@@ -133,18 +133,18 @@ export async function getAdminBranches(): Promise<AdminBranch[]> {
 }
 
 export async function addAdminBranch(data: { name: string; address: string; city: string; phone: string; email: string; map_link: string }): Promise<void> {
-  const { error } = await supabase.from('branches').insert([{ name: data.name, address: data.address, city: data.city, phone: data.phone, email: data.email || null, map_link: data.map_link || null }])
-  if (error && !error.message?.includes('not configured')) console.warn('Failed to add branch:', error.message)
+  const { error } = await supabaseAdmin.from('branches').insert([{ name: data.name, address: data.address, city: data.city, phone: data.phone, email: data.email || null, map_link: data.map_link || null }])
+  if (error) throw error
 }
 
 export async function updateAdminBranch(id: string, data: { name: string; address: string; city: string; phone: string; email: string; map_link: string }): Promise<void> {
-  const { error } = await supabase.from('branches').update(data).eq('id', id)
-  if (error && !error.message?.includes('not configured')) console.warn('Failed to update branch:', error.message)
+  const { error } = await supabaseAdmin.from('branches').update(data).eq('id', id)
+  if (error) throw error
 }
 
 export async function deleteAdminBranch(id: string): Promise<void> {
-  const { error } = await supabase.from('branches').delete().eq('id', id)
-  if (error && !error.message?.includes('not configured')) console.warn('Failed to delete branch:', error.message)
+  const { error } = await supabaseAdmin.from('branches').delete().eq('id', id)
+  if (error) throw error
 }
 
 // ==================== COURSES ====================
@@ -195,7 +195,7 @@ export async function getAdminCourses(): Promise<AdminCourse[]> {
 export async function addAdminCourse(data: { title: string; description: string; class_level: string; subjects: string; duration: string; fee_monthly: number; fee_admission: number; schedule: string; branch: string }): Promise<void> {
   const branches = await getBranches()
   const branch = branches.find((b) => b.name === data.branch)
-  const { error } = await supabase.from('courses').insert([{
+  const { error } = await supabaseAdmin.from('courses').insert([{
     title: data.title,
     description: data.description || null,
     class_level: data.class_level,
@@ -207,13 +207,13 @@ export async function addAdminCourse(data: { title: string; description: string;
     branch_id: branch?.id || null,
     is_active: true,
   }])
-  if (error && !error.message?.includes('not configured')) console.warn('Failed to add course:', error.message)
+  if (error) throw error
 }
 
 export async function updateAdminCourse( courseId: string, data: { title: string; description: string; class_level: string; subjects: string; duration: string; fee_monthly: number; fee_admission: number; schedule: string; branch: string; active: boolean }): Promise<void> {
   const branches = await getBranches()
   const branch = branches.find((b) => b.name === data.branch)
-  const { error } = await supabase.from('courses').update({
+  const { error } = await supabaseAdmin.from('courses').update({
     title: data.title,
     description: data.description || null,
     class_level: data.class_level,
@@ -225,12 +225,12 @@ export async function updateAdminCourse( courseId: string, data: { title: string
     branch_id: branch?.id || null,
     is_active: data.active,
   }).eq('id', courseId)
-  if (error && !error.message?.includes('not configured')) console.warn('Failed to update course:', error.message)
+  if (error) throw error
 }
 
 export async function deleteAdminCourse(courseId: string): Promise<void> {
-  const { error } = await supabase.from('courses').delete().eq('id', courseId)
-  if (error && !error.message?.includes('not configured')) console.warn('Failed to delete course:', error.message)
+  const { error } = await supabaseAdmin.from('courses').delete().eq('id', courseId)
+  if (error) throw error
 }
 
 // ==================== FACULTY ====================
@@ -258,18 +258,18 @@ export async function getFaculty(): Promise<FacultyMember[]> {
 }
 
 export async function addFaculty(data: { name: string; qualification: string; subject: string; bio: string; image_url: string }): Promise<void> {
-  const { error } = await supabase.from('faculty').insert([{ ...data, is_active: true, image_url: data.image_url || null }])
-  if (error && !error.message?.includes('not configured')) console.warn('Failed to add faculty:', error.message)
+  const { error } = await supabaseAdmin.from('faculty').insert([{ ...data, is_active: true, image_url: data.image_url || null }])
+  if (error) throw error
 }
 
 export async function updateFaculty(supabaseId: string, data: { name: string; qualification: string; subject: string; bio: string; image_url: string; active: boolean }): Promise<void> {
-  const { error } = await supabase.from('faculty').update({ name: data.name, qualification: data.qualification, subject: data.subject, bio: data.bio, image_url: data.image_url || null, is_active: data.active }).eq('id', supabaseId)
-  if (error && !error.message?.includes('not configured')) console.warn('Failed to update faculty:', error.message)
+  const { error } = await supabaseAdmin.from('faculty').update({ name: data.name, qualification: data.qualification, subject: data.subject, bio: data.bio, image_url: data.image_url || null, is_active: data.active }).eq('id', supabaseId)
+  if (error) throw error
 }
 
 export async function deleteFaculty(supabaseId: string): Promise<void> {
-  const { error } = await supabase.from('faculty').delete().eq('id', supabaseId)
-  if (error && !error.message?.includes('not configured')) console.warn('Failed to delete faculty:', error.message)
+  const { error } = await supabaseAdmin.from('faculty').delete().eq('id', supabaseId)
+  if (error) throw error
 }
 
 // ==================== TESTIMONIALS ====================
@@ -297,18 +297,18 @@ export async function getTestimonials(): Promise<Testimonial[]> {
 }
 
 export async function addTestimonial(data: { student_name: string; achievement: string; class_level: string; quote: string; rating: number }): Promise<void> {
-  const { error } = await supabase.from('testimonials').insert([{ student_name: data.student_name, achievement: data.achievement || null, class_level: data.class_level || null, quote: data.quote, is_active: true }])
-  if (error && !error.message?.includes('not configured')) console.warn('Failed to add testimonial:', error.message)
+  const { error } = await supabaseAdmin.from('testimonials').insert([{ student_name: data.student_name, achievement: data.achievement || null, class_level: data.class_level || null, quote: data.quote, is_active: true }])
+  if (error) throw error
 }
 
 export async function updateTestimonial(supabaseId: string, data: { student_name: string; achievement: string; class_level: string; quote: string; rating: number; visible: boolean }): Promise<void> {
-  const { error } = await supabase.from('testimonials').update({ student_name: data.student_name, achievement: data.achievement || null, class_level: data.class_level || null, quote: data.quote, is_active: data.visible }).eq('id', supabaseId)
-  if (error && !error.message?.includes('not configured')) console.warn('Failed to update testimonial:', error.message)
+  const { error } = await supabaseAdmin.from('testimonials').update({ student_name: data.student_name, achievement: data.achievement || null, class_level: data.class_level || null, quote: data.quote, is_active: data.visible }).eq('id', supabaseId)
+  if (error) throw error
 }
 
 export async function deleteTestimonial(supabaseId: string): Promise<void> {
-  const { error } = await supabase.from('testimonials').delete().eq('id', supabaseId)
-  if (error && !error.message?.includes('not configured')) console.warn('Failed to delete testimonial:', error.message)
+  const { error } = await supabaseAdmin.from('testimonials').delete().eq('id', supabaseId)
+  if (error) throw error
 }
 
 // ==================== STATS ====================
@@ -336,8 +336,8 @@ export async function getStats(): Promise<StatItem[]> {
 
 export async function upsertStat(key: string, label: string, value: number): Promise<void> {
   const dbKey = 'stat_' + key
-  const { error } = await supabase.from('site_settings').upsert({ key: dbKey, value: String(value) }, { onConflict: 'key' })
-  if (error && !error.message?.includes('not configured')) console.warn('Failed to save stat:', error.message)
+  const { error } = await supabaseAdmin.from('site_settings').upsert({ key: dbKey, value: String(value) }, { onConflict: 'key' })
+  if (error) throw error
 }
 
 // ==================== ANNOUNCEMENTS ====================
@@ -367,16 +367,21 @@ export async function getHomeAnnouncements(): Promise<string[]> {
 }
 
 export async function addAnnouncement(data: { title: string; content: string }): Promise<void> {
-  const { error } = await supabase.from('announcements').insert([{ title: data.title, message: data.content, is_active: true }])
-  if (error && !error.message?.includes('not configured')) console.warn('Failed to add announcement:', error.message)
+  const { error } = await supabaseAdmin.from('announcements').insert([{
+    title: data.title,
+    message: data.content,
+    is_active: true,
+    created_at: new Date().toISOString()
+  }])
+  if (error) throw error
 }
 
 export async function toggleAnnouncement(supabaseId: string): Promise<void> {
   const announcements = await getAnnouncements()
   const target = announcements.find((a) => a.supabaseId === supabaseId)
   if (!target) return
-  const { error } = await supabase.from('announcements').update({ is_active: !target.active }).eq('id', supabaseId)
-  if (error && !error.message?.includes('not configured')) console.warn('Failed to toggle announcement:', error.message)
+  const { error } = await supabaseAdmin.from('announcements').update({ is_active: !target.active }).eq('id', supabaseId)
+  if (error) throw error
 }
 
 // ==================== SETTINGS ====================
@@ -432,8 +437,8 @@ export async function getSettings(): Promise<Record<string, string>> {
 
 export async function upsertSetting(key: string, value: string): Promise<void> {
   const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase()
-  const { error } = await supabase.from('site_settings').upsert({ key: dbKey, value }, { onConflict: 'key' })
-  if (error && !error.message?.includes('not configured')) console.warn('Failed to save setting:', error.message)
+  const { error } = await supabaseAdmin.from('site_settings').upsert({ key: dbKey, value }, { onConflict: 'key' })
+  if (error) throw error
 }
 
 export async function saveSettings(settings: Record<string, string>): Promise<void> {
@@ -458,8 +463,8 @@ export async function saveSettings(settings: Record<string, string>): Promise<vo
   }
   for (const [key, value] of Object.entries(settings)) {
     const dbKey = mapping[key] || key
-    const { error } = await supabase.from('site_settings').upsert({ key: dbKey, value }, { onConflict: 'key' })
-    if (error) console.warn('Failed to save setting ' + key + ':', error.message)
+    const { error } = await supabaseAdmin.from('site_settings').upsert({ key: dbKey, value }, { onConflict: 'key' })
+    if (error) throw error
   }
 }
 
@@ -481,7 +486,7 @@ export async function getAdmissions(): Promise<LocalAdmission[]> {
   return data as unknown as LocalAdmission[]
 }
 
-export async function addAdmission(data: Omit<LocalAdmission, 'id' | 'status' | 'applied_at'>): Promise<void> {
+export async function addAdmission(data: Omit<LocalAdmission, 'id'>): Promise<void> {
   const { error } = await supabaseAdmin.from('admissions').insert([data])
   if (error) throw error
 }

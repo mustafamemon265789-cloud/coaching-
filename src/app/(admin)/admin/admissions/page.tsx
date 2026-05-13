@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import DataTable from '@/components/admin/DataTable'
 import { useToast } from '@/components/admin/ToastProvider'
 import { getAdmissions, updateAdmission, type LocalAdmission } from '@/lib/db'
@@ -43,25 +43,33 @@ export default function AdmissionsPage() {
 
   const loadData = async (showLoading = true) => {
     if (showLoading) setIsLoading(true)
-    const rawData = await getAdmissions()
-    setAdmissions(rawData.map(mapAdmission))
-    setIsLoading(false)
+    try {
+      const rawData = await getAdmissions()
+      setAdmissions(rawData.map(mapAdmission))
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   useEffect(() => {
     let isMounted = true
+    let pollingInterval: NodeJS.Timeout | null = null
 
-    void getAdmissions()
-      .then((rawData) => {
-        if (!isMounted) return
-        setAdmissions(rawData.map(mapAdmission))
-      })
-      .finally(() => {
-        if (isMounted) setIsLoading(false)
-      })
+    // Initial load
+    void loadData()
+
+    // Set up polling to refresh data every 5 seconds
+    pollingInterval = setInterval(() => {
+      if (isMounted) {
+        void loadData(false) // Don't show loading indicator for polling updates
+      }
+    }, 5000)
 
     return () => {
       isMounted = false
+      if (pollingInterval) {
+        clearInterval(pollingInterval)
+      }
     }
   }, [])
 
@@ -72,8 +80,9 @@ export default function AdmissionsPage() {
       await updateAdmission(id, { status })
       await loadData(false)
       showToast('success', `Admission status updated to ${status}.`)
-    } catch {
-      showToast('error', 'Failed to update admission.')
+    } catch (error: any) {
+      console.error('Failed to update admission:', error)
+      showToast('error', error.message || 'Failed to update admission.')
     }
   }
 
