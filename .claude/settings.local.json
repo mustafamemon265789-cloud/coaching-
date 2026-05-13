@@ -4,7 +4,10 @@
       "Bash(npm run *)",
       "Bash(taskkill /PID 13444 /F)",
       "Bash(taskkill /F /PID 13444)",
-      "Bash(cmd.exe /c \"taskkill /F /PID 13444\")"
+      "Bash(cmd.exe /c \"taskkill /F /PID 13444\")",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)"
     ]
   }
 }
